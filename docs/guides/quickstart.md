@@ -258,10 +258,10 @@ node your-app.js
 
 ## 📚 下一步
 
-- 📖 阅读完整 [README](./README.md)
-- 🔧 查看 [配置选项](./README.md#配置)
-- 📝 浏览 [示例代码](./examples)
-- 🤝 阅读 [贡献指南](./CONTRIBUTING.md)
+- 📖 阅读完整 [README](../../README.md)
+- 🔧 查看 [配置选项](../../README.md#配置)
+- 📝 浏览 [示例代码](../../examples)
+- 🤝 阅读 [贡献指南](../../CONTRIBUTING.md)
 
 ## 💡 提示
 

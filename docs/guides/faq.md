@@ -412,7 +412,7 @@ node --inspect -r node-network-devtools\\register your-script.js
 
 ### Q: 如何贡献代码？
 
-**A:** 欢迎贡献！请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+**A:** 欢迎贡献！请阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md)。
 
 ### Q: 如何报告 bug？
 
