@@ -124,9 +124,15 @@ function createInterceptor() {
       }
 
       // 构建完整 URL
+      // 注意：path 可能是完整 URL（代理场景）或相对路径
       const origin = opts.origin?.toString() || '';
       const path = opts.path || '/';
-      const url = `${origin}${path}`;
+      
+      // 如果 path 已经是完整 URL（以 http:// 或 https:// 开头），直接使用
+      // 否则拼接 origin 和 path
+      const url = (path.startsWith('http://') || path.startsWith('https://')) 
+        ? path 
+        : `${origin}${path}`;
 
       console.log('[undici-patcher] 拦截到请求:', opts.method || 'GET', url);
 

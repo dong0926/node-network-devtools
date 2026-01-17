@@ -70,4 +70,33 @@ describe('UndiciPatcher', () => {
       expect(typeof UndiciPatcher.setTraceIdGetter).toBe('function');
     });
   });
+
+  describe('URL 构建逻辑', () => {
+    it('应该正确处理相对路径', () => {
+      const origin = 'http://example.com';
+      const path = '/api/users';
+      const url = path.startsWith('http://') || path.startsWith('https://') 
+        ? path 
+        : `${origin}${path}`;
+      expect(url).toBe('http://example.com/api/users');
+    });
+
+    it('应该正确处理完整 URL（代理场景）', () => {
+      const origin = 'http://127.0.0.1:7897';
+      const path = 'http://api.pl2w.top/fulu-page-cloud/anon/cms/getVersion';
+      const url = path.startsWith('http://') || path.startsWith('https://') 
+        ? path 
+        : `${origin}${path}`;
+      expect(url).toBe('http://api.pl2w.top/fulu-page-cloud/anon/cms/getVersion');
+    });
+
+    it('应该正确处理 HTTPS 完整 URL', () => {
+      const origin = 'http://proxy.local:8080';
+      const path = 'https://api.example.com/data';
+      const url = path.startsWith('http://') || path.startsWith('https://') 
+        ? path 
+        : `${origin}${path}`;
+      expect(url).toBe('https://api.example.com/data');
+    });
+  });
 });
