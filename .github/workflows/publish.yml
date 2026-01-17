@@ -1,0 +1,58 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build project
+        run: pnpm build
+      
+      - name: Run tests
+        run: pnpm test:all
+      
+      - name: Publish to npm
+        run: pnpm publish --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Create GitHub Release Assets
+        run: |
+          tar -czf node-network-devtools-${{ github.event.release.tag_name }}.tar.gz dist/ package.json README.md LICENSE
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./node-network-devtools-${{ github.event.release.tag_name }}.tar.gz
+          asset_name: node-network-devtools-${{ github.event.release.tag_name }}.tar.gz
+          asset_content_type: application/gzip

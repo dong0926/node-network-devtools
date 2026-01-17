@@ -1,0 +1,25 @@
+{
+  "name": "nextjs-app-example",
+  "version": "1.0.0",
+  "description": "Next.js App Router 网络监听示例",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=--inspect next dev",
+    "dev:gui": "cross-env NODE_OPTIONS=--inspect NND_GUI_ENABLED=true next dev",
+    "build": "next build",
+    "start": "cross-env NODE_OPTIONS=--inspect next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.0.0"
+  }
+}

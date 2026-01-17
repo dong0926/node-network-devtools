@@ -1,0 +1,11 @@
+{
+  "name": "programmatic-api-example",
+  "version": "1.0.0",
+  "description": "编程式 API 使用示例",
+  "type": "module",
+  "scripts": {
+    "start": "node --inspect index.js",
+    "start:gui": "npx node-network-devtools --gui index.js"
+  },
+  "dependencies": {}
+}

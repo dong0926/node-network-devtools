@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS 变量 - 深色主题（默认） */
+:root, .dark {
+  --devtools-bg: #202124;
+  --devtools-bg-secondary: #292a2d;
+  --devtools-bg-hover: #35363a;
+  --devtools-bg-selected: #3c4043;
+  --devtools-border: #3c4043;
+  --devtools-text: #e8eaed;
+  --devtools-text-secondary: #9aa0a6;
+  --devtools-accent: #8ab4f8;
+  --devtools-success: #81c995;
+  --devtools-warning: #fdd663;
+  --devtools-error: #f28b82;
+  --devtools-pending: #9aa0a6;
+  --devtools-method: #8ab4f8;
+  --devtools-header-name: #9980ff;
+  
+  --scrollbar-track: #202124;
+  --scrollbar-thumb: #5f6368;
+  --scrollbar-thumb-hover: #80868b;
+}
+
+/* CSS 变量 - 浅色主题 */
+.light {
+  --devtools-bg: #ffffff;
+  --devtools-bg-secondary: #f1f3f4;
+  --devtools-bg-hover: #e8eaed;
+  --devtools-bg-selected: #d2e3fc;
+  --devtools-border: #dadce0;
+  --devtools-text: #202124;
+  --devtools-text-secondary: #5f6368;
+  --devtools-accent: #1a73e8;
+  --devtools-success: #188038;
+  --devtools-warning: #f9ab00;
+  --devtools-error: #d93025;
+  --devtools-pending: #5f6368;
+  --devtools-method: #1a73e8;
+  --devtools-header-name: #7c4dff;
+  
+  --scrollbar-track: #f1f3f4;
+  --scrollbar-thumb: #dadce0;
+  --scrollbar-thumb-hover: #bdc1c6;
+}
+
+/* 基础样式 */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 滚动条样式（Chrome DevTools 风格） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* 选中文本样式 */
+::selection {
+  background: rgba(138, 180, 248, 0.3);
+}
+
+.light ::selection {
+  background: rgba(26, 115, 232, 0.2);
+}
+
+/* 代码块样式 */
+.code-block {
+  @apply font-mono text-sm bg-devtools-bg-secondary p-2 rounded overflow-auto;
+}
+
+/* 表格行悬停效果 */
+.request-row:hover {
+  @apply bg-devtools-bg-hover;
+}
+
+/* 选中行样式 */
+.request-row.selected {
+  @apply bg-devtools-accent bg-opacity-20;
+}

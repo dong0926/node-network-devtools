@@ -1,0 +1,36 @@
+# 代码所有者文件
+# 这个文件定义了谁负责审查代码的特定部分
+# 详细信息：https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 默认所有者（所有文件）
+* @dong0926
+
+# 核心源代码
+/src/ @dong0926
+
+# 拦截器
+/src/interceptors/ @dong0926
+
+# GUI 相关
+/packages/gui/ @dong0926
+/src/gui/ @dong0926
+
+# 文档
+*.md @dong0926
+/docs/ @dong0926
+
+# 配置文件
+*.json @dong0926
+*.yml @dong0926
+*.yaml @dong0926
+
+# GitHub Actions
+/.github/ @dong0926
+
+# 测试
+*.test.ts @dong0926
+*.test.js @dong0926
+*.test.mjs @dong0926
+
+# 示例
+/examples/ @dong0926

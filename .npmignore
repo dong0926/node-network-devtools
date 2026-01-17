@@ -1,0 +1,77 @@
+# 源代码（只发布编译后的代码）
+src/
+packages/
+
+# 测试文件
+*.test.ts
+*.test.js
+*.test.mjs
+*.spec.ts
+*.spec.js
+test-*.js
+vitest.config.ts
+test-setup.ts
+
+# 配置文件
+tsconfig*.json
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# 开发工具
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 示例（可选：如果想包含示例，删除这行）
+examples/
+
+# 文档（保留 README 和 LICENSE）
+docs/
+*.md
+!README.md
+!README.zh-CN.md
+!LICENSE
+!CHANGELOG.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+
+# 依赖
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# 构建临时文件
+*.tsbuildinfo
+.cache/
+
+# 日志
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# 环境变量
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 覆盖率报告
+coverage/
+.nyc_output/
+
+# Kiro 规范文件
+.kiro/

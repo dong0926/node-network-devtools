@@ -1,0 +1,11 @@
+{
+  "name": "request-tracing-example",
+  "version": "1.0.0",
+  "description": "请求追踪示例 - 使用 TraceID 关联请求",
+  "type": "module",
+  "scripts": {
+    "start": "npx node-network-devtools index.js",
+    "start:gui": "npx node-network-devtools --gui index.js"
+  },
+  "dependencies": {}
+}

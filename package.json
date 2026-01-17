@@ -1,0 +1,103 @@
+{
+  "name": "node-network-devtools",
+  "version": "0.1.0",
+  "description": "🔍 Node.js network request monitoring tool with Chrome DevTools integration and built-in Web GUI",
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./register": {
+      "import": "./dist/esm/register.js"
+    }
+  },
+  "bin": {
+    "node-network-devtools": "./dist/esm/cli.js",
+    "nnd": "./dist/esm/cli.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md",
+    "LICENSE",
+    "BUILD.md"
+  ],
+  "scripts": {
+    "build": "pnpm build:esm && pnpm build:types && pnpm build:gui",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "build:gui": "cd packages/gui && pnpm build",
+    "test": "vitest run",
+    "test:http": "npx tsx --test src/interceptors/http-patcher.node-test.mjs",
+    "test:undici": "npx tsx --test src/interceptors/undici-patcher.node-test.mjs",
+    "test:all": "pnpm test && pnpm test:http && pnpm test:undici",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rimraf dist",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\" \"packages/**/*.{ts,tsx,js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\" \"packages/**/*.{ts,tsx,js,json}\"",
+    "prepublishOnly": "pnpm clean && pnpm build && pnpm test:all",
+    "prepack": "pnpm build",
+    "release:patch": "npm version patch && git push --follow-tags",
+    "release:minor": "npm version minor && git push --follow-tags",
+    "release:major": "npm version major && git push --follow-tags",
+    "setup": "node scripts/update-placeholders.js"
+  },
+  "keywords": [
+    "nodejs",
+    "network",
+    "devtools",
+    "debugging",
+    "chrome",
+    "cdp",
+    "fetch",
+    "http",
+    "inspector",
+    "monitoring",
+    "interceptor",
+    "websocket",
+    "gui",
+    "nextjs",
+    "express",
+    "request",
+    "response",
+    "trace"
+  ],
+  "author": "ddddd xx630133368@gmail.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dong0926/node-network-devtools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dong0926/node-network-devtools/issues"
+  },
+  "homepage": "https://github.com/dong0926/node-network-devtools#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.13",
+    "fast-check": "^3.15.0",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  },
+  "dependencies": {
+    "@mswjs/interceptors": "^0.40.0",
+    "nanoid": "^5.0.4",
+    "open": "^10.1.0",
+    "undici": "^7.18.2",
+    "ws": "^8.18.0"
+  },
+  "optionalDependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}
