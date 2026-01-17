@@ -4,7 +4,7 @@
 
 **Monitor Node.js network requests with Chrome DevTools integration and built-in Web GUI**
 
-[![npm version](https://img.shields.io/npm/v/node-network-devtools.svg)](https://www.npmjs.com/package/node-network-devtools)
+[![npm version](https://img.shields.io/npm/v/node-network-devtools.svg)](https://www.npmjs.com/package/@mt0926/node-network-devtools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/node-network-devtools.svg)](https://nodejs.org)
 
