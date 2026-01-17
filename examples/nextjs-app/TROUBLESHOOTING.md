@@ -1,6 +1,67 @@
 # Next.js 示例故障排查
 
-## 问题：GUI 中看不到 Next.js 的 fetch 请求
+## 问题 1：Webpack 警告和错误
+
+### 症状
+
+在启动 Next.js 开发服务器时，看到以下警告或错误：
+
+```
+⚠ Critical dependency: the request of a dependency is an expression
+Import trace: import-fresh/index.js → cosmiconfig → puppeteer
+
+Module not found: Can't resolve 'source-map-support' in 'typescript/lib'
+```
+
+### 原因
+
+Next.js 的 Webpack 在客户端打包时，试图打包服务端专用的依赖（如 `puppeteer`、`typescript`），导致警告和错误。
+
+### 解决方案
+
+在 `next.config.js` 中配置 Webpack，排除这些服务端专用依赖：
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    instrumentationHook: true,
+  },
+
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // 客户端打包：排除服务端专用的包
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        puppeteer: false,
+        'source-map-support': false,
+      };
+
+      // 忽略可选依赖的警告
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings || []),
+        { module: /node_modules\/puppeteer/ },
+        { module: /node_modules\/import-fresh/ },
+        { module: /node_modules\/cosmiconfig/ },
+      ];
+    }
+
+    return config;
+  },
+};
+
+module.exports = nextConfig;
+```
+
+**详细说明**：查看 [../../NEXTJS-WEBPACK-WARNINGS.md](../../NEXTJS-WEBPACK-WARNINGS.md) 了解完整的问题分析和解决方案。
+
+---
+
+## 问题 2：GUI 中看不到 Next.js 的 fetch 请求
 
 ### 原因分析
 

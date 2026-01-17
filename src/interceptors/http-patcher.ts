@@ -76,23 +76,101 @@ const requestMetadata = new Map<string, {
  * 安装 HTTP 拦截器
  */
 export function install(): void {
-  if (installed) return;
+  if (installed) {
+    console.log('[http-patcher] ⚠️ HTTP 拦截器已经安装，跳过');
+    return;
+  }
+
+  console.log('[http-patcher] 🔧 开始安装 HTTP 拦截器...');
+
+  // 🔧 Monkey-patch URL 构造函数来捕获 axios 代理场景的错误
+  const OriginalURL = globalThis.URL;
+  const urlCreationErrors = new WeakSet();
+  
+  (globalThis as any).URL = function PatchedURL(url: string, base?: string | URL) {
+    try {
+      return new OriginalURL(url, base);
+    } catch (error) {
+      // 检测是否是 axios 代理场景导致的 URL 错误
+      // 模式：http://proxy-host:port/http://target-host/path
+      const duplicateUrlPattern = /^(https?:\/\/[^\/]+?)(https?:\/\/.+)$/;
+      const match = url.match(duplicateUrlPattern);
+      
+      if (match) {
+        const targetUrl = match[2];
+        console.log('[http-patcher] 🔧 检测到 axios 代理 URL 错误，自动修复:');
+        console.log('  错误 URL:', url);
+        console.log('  修复为:', targetUrl);
+        
+        // 使用目标 URL 重新创建
+        const fixedUrl = new OriginalURL(targetUrl, base);
+        urlCreationErrors.add(fixedUrl);
+        return fixedUrl;
+      }
+      
+      // 其他错误继续抛出
+      throw error;
+    }
+  };
+  
+  // 保留 URL 的静态方法和属性
+  Object.setPrototypeOf((globalThis as any).URL, OriginalURL);
+  Object.setPrototypeOf((globalThis as any).URL.prototype, OriginalURL.prototype);
 
   interceptor = new ClientRequestInterceptor();
   
   // 监听请求事件
   interceptor.on('request', async ({ request, requestId }) => {
     const config = getConfig();
-    if (!config.interceptHttp) return;
-
-    const url = request.url;
+    
+    let url = request.url;
+    
+    // 🔍 调试日志：HTTP 拦截器
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[http-patcher] 🔍 HTTP 请求拦截调试:');
+    console.log('  请求 URL:', url);
+    console.log('  请求方法:', request.method);
+    console.log('  拦截器 ID:', requestId);
+    console.log('  interceptHttp 配置:', config.interceptHttp);
+    
+    // 🔧 检测 axios 代理场景导致的 URL 重复拼接
+    // 模式：http://proxy-host:port/http://target-host/path
+    // 或：http://proxy-host:porthttps://target-host/path（没有斜杠）
+    const duplicateUrlPattern = /^(https?:\/\/[^\/]+?)(https?:\/\/.+)$/;
+    const match = url.match(duplicateUrlPattern);
+    
+    if (match) {
+      const proxyUrl = match[1];
+      const targetUrl = match[2];
+      
+      console.log('  🔧 检测到 URL 重复拼接（axios + 代理场景）');
+      console.log('  原始 URL:', url);
+      console.log('  代理地址:', proxyUrl);
+      console.log('  目标 URL:', targetUrl);
+      console.log('  ⚠️ 跳过拦截，避免干扰 axios 代理请求');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      // 直接返回，不记录此请求
+      return;
+    }
+    
+    if (!config.interceptHttp) {
+      console.log('  ⚠️ HTTP 拦截已禁用，跳过处理');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      return;
+    }
     
     // 检查是否应该忽略此 URL
     for (const pattern of config.ignoreUrls) {
       if (pattern.test(url)) {
+        console.log('  ⚠️ URL 匹配忽略规则，跳过:', pattern);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         return;
       }
     }
+
+    console.log('  ✅ 请求将被拦截和记录');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     const myRequestId = generateRequestId();
     const stackTrace = captureStackTrace();
@@ -124,6 +202,8 @@ export function install(): void {
     };
 
     getRequestStore().add(requestData);
+    
+    console.log('[http-patcher] 请求已添加到存储:', myRequestId, url);
 
     // 通知 Event Bridge
     try {
@@ -195,6 +275,8 @@ export function install(): void {
   // 启用拦截器
   interceptor.apply();
   installed = true;
+  
+  console.log('[http-patcher] ✅ HTTP 拦截器安装成功');
 }
 
 /**

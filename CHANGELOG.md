@@ -13,6 +13,25 @@
 - 性能分析和瓶颈检测
 - 导出请求数据（HAR 格式）
 
+## [0.1.3] - 2026-01-17
+
+### 修复
+
+- **axios + HTTP 代理兼容性问题**：修复了在使用 axios + HTTP 代理时出现的 `Invalid URL` 错误
+  - 通过 monkey-patching `URL` 构造函数自动检测并修复 URL 重复拼接问题
+  - 零配置，用户无需修改代码
+  - 完全透明，不影响正常请求
+  - 详见 `AXIOS-PROXY-FIX-SUMMARY.md`
+
+- **Next.js Webpack 警告**：修复了 Next.js 打包时的 puppeteer 和 source-map-support 警告
+  - 使用 `eval` 动态加载 puppeteer 避免 Webpack 静态分析
+  - 在 Next.js 配置中排除服务端模块
+
+### 新增
+
+- 新增 `examples/axios-proxy` 示例，演示 axios + 代理的使用场景
+- 新增详细的调试日志，帮助诊断 URL 解析问题
+
 ## [0.1.0] - 2026-01-17
 
 ### 新增

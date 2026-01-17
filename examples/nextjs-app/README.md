@@ -174,15 +174,46 @@ export async function register() {
 
 ### next.config.js
 
-需要启用 instrumentation 功能：
+需要启用 instrumentation 功能，并配置 Webpack 以避免打包警告：
 
 ```javascript
-module.exports = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+
+  // Webpack 配置：排除服务端专用依赖
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // 客户端打包：排除服务端专用的包
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        puppeteer: false,
+        'source-map-support': false,
+      };
+
+      // 忽略可选依赖的警告
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings || []),
+        { module: /node_modules\/puppeteer/ },
+        { module: /node_modules\/import-fresh/ },
+        { module: /node_modules\/cosmiconfig/ },
+      ];
+    }
+
+    return config;
+  },
 };
+
+module.exports = nextConfig;
 ```
+
+**重要**：这个配置可以避免 Webpack 在客户端打包时出现警告和错误。详见 [../../NEXTJS-WEBPACK-WARNINGS.md](../../NEXTJS-WEBPACK-WARNINGS.md)。
 
 ## 环境变量
 

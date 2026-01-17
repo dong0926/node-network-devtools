@@ -1,0 +1,14 @@
+{
+  "name": "axios-proxy-example",
+  "version": "1.0.0",
+  "description": "测试 axios + HTTP 代理的兼容性",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "start:proxy": "HTTP_PROXY=http://127.0.0.1:7897 node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

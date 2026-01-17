@@ -67,8 +67,10 @@ class BrowserLauncherImpl implements IBrowserLauncher {
    */
   private async openWithPuppeteer(url: string): Promise<void> {
     try {
-      // 动态导入 puppeteer（可选依赖）
-      const puppeteer = await import('puppeteer');
+      // 使用 eval 来完全避免静态分析
+      // 这样 Webpack 就不会尝试解析 puppeteer 的依赖树
+      const puppeteerModule = 'puppeteer';
+      const puppeteer = await (0, eval)(`import('${puppeteerModule}')`);
       
       // 启动浏览器
       this.puppeteerBrowser = await puppeteer.default.launch({

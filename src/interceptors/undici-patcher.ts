@@ -128,11 +128,33 @@ function createInterceptor() {
       const origin = opts.origin?.toString() || '';
       const path = opts.path || '/';
       
+      // 🔍 调试日志：帮助诊断 URL 构建问题
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('[undici-patcher] 🔍 URL 构建调试信息:');
+      console.log('  原始 opts.origin:', opts.origin);
+      console.log('  原始 opts.path:', opts.path);
+      console.log('  处理后 origin:', origin);
+      console.log('  处理后 path:', path);
+      console.log('  path 类型:', typeof path);
+      console.log('  path.startsWith 可用?', typeof path.startsWith === 'function');
+      
+      if (typeof path.startsWith === 'function') {
+        console.log('  path.startsWith("http://"):', path.startsWith('http://'));
+        console.log('  path.startsWith("https://"):', path.startsWith('https://'));
+      } else {
+        console.log('  ⚠️ 警告: path 不是字符串或没有 startsWith 方法!');
+        console.log('  path 的实际类型:', Object.prototype.toString.call(path));
+      }
+      
       // 如果 path 已经是完整 URL（以 http:// 或 https:// 开头），直接使用
       // 否则拼接 origin 和 path
       const url = (path.startsWith('http://') || path.startsWith('https://')) 
         ? path 
         : `${origin}${path}`;
+      
+      console.log('  最终 URL:', url);
+      console.log('  URL 是否有效:', url.startsWith('http://') || url.startsWith('https://'));
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       console.log('[undici-patcher] 拦截到请求:', opts.method || 'GET', url);
 
