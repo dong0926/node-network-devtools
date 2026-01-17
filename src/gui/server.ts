@@ -27,7 +27,6 @@ export interface GUIServerConfig {
   host: string;
   enabled: boolean;
   autoOpen: boolean;
-  usePuppeteer: boolean;
 }
 
 /**

@@ -2,6 +2,47 @@
 
 演示如何在 Next.js App Router 应用中使用 node-network-devtools 监听网络请求。
 
+## ⚠️ 重要提示
+
+### Puppeteer 自动检测（v0.2.0+）
+
+✅ **从 v0.2.0 开始，库已经自动检测并处理 Next.js Webpack 环境！**
+
+库会自动检测 Webpack 打包环境并优雅降级：
+- 显示友好的警告信息
+- 跳过 Puppeteer 导入和浏览器启动
+- GUI 服务器仍然正常启动
+- 你可以手动访问控制台输出的 GUI URL
+
+**你不需要做任何配置！** 应用会正常启动，只需手动打开浏览器访问 GUI URL。
+
+### 可选配置（如果想禁用警告）
+
+如果你想完全禁用警告，可以显式设置 `autoOpen: false`：
+
+在 `instrumentation.ts` 中：
+
+```typescript
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { install, startGUI } = await import('node-network-devtools');
+    
+    await install();
+    
+    // 可选：显式禁用自动打开浏览器（库会自动检测）
+    await startGUI({ autoOpen: false });
+    
+    console.log('✓ GUI 已启动，请手动访问控制台中的 URL');
+  }
+}
+```
+
+**相关文档：**
+- [FAQ - Next.js Puppeteer 问题](../../docs/guides/faq.md#q-nextjs-中-puppeteer-导入失败怎么办)
+- [维护记录 - 自动检测机制](../../docs/maintenance/nextjs-puppeteer-auto-detection-2026-01-18.md)
+
+---
+
 ## 📚 文档导航
 
 - **[QUICKSTART.md](./QUICKSTART.md)** - 快速启动指南（推荐新手）

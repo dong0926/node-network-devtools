@@ -21,14 +21,15 @@ describe('Config Module', () => {
     delete process.env.NND_INTERCEPT_UNDICI;
     delete process.env.NND_REDACT_HEADERS;
     delete process.env.NND_DISABLE_BODY_CAPTURE;
-    delete process.env.NND_AUTO_CONNECT;
-    delete process.env.NND_INSPECTOR_PORT;
     // GUI 相关环境变量
     delete process.env.NND_GUI_ENABLED;
     delete process.env.NND_GUI_PORT;
     delete process.env.NND_WS_PORT;
     delete process.env.NND_AUTO_OPEN;
-    delete process.env.NND_USE_PUPPETEER;
+    // 浏览器窗口配置环境变量
+    delete process.env.NND_BROWSER_WIDTH;
+    delete process.env.NND_BROWSER_HEIGHT;
+    delete process.env.NND_BROWSER_TITLE;
     resetConfig();
   });
 
@@ -47,13 +48,14 @@ describe('Config Module', () => {
       expect(config.interceptUndici).toBe(true);
       expect(config.redactHeaders).toEqual(['authorization', 'cookie']);
       expect(config.disableBodyCapture).toBe(false);
-      expect(config.autoConnect).toBe(true);
       // GUI 配置默认值
       expect(config.guiEnabled).toBe(true);
       expect(config.guiPort).toBe('auto');
       expect(config.wsPort).toBe('auto');
       expect(config.autoOpen).toBe(true);
-      expect(config.usePuppeteer).toBe(false);
+      // 浏览器窗口配置默认值
+      expect(config.browserWindowSize).toEqual({ width: 800, height: 600 });
+      expect(config.browserWindowTitle).toBe('Node Network DevTools');
     });
   });
 
@@ -165,21 +167,6 @@ describe('Config Module', () => {
       );
     });
 
-    it('should use NND_AUTO_CONNECT from environment', () => {
-      fc.assert(
-        fc.property(
-          fc.boolean(),
-          (autoConnect) => {
-            process.env.NND_AUTO_CONNECT = String(autoConnect);
-            resetConfig();
-            const config = getConfig();
-            return config.autoConnect === autoConnect;
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-
     it('should use NND_REDACT_HEADERS from environment', () => {
       fc.assert(
         fc.property(
@@ -191,21 +178,6 @@ describe('Config Module', () => {
             // 环境变量解析会转为小写
             const expected = headers.map(h => h.toLowerCase());
             return JSON.stringify(config.redactHeaders) === JSON.stringify(expected);
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-
-    it('should use NND_INSPECTOR_PORT from environment', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 1024, max: 65535 }),
-          (port) => {
-            process.env.NND_INSPECTOR_PORT = String(port);
-            resetConfig();
-            const config = getConfig();
-            return config.inspectorPort === port;
           }
         ),
         { numRuns: 100 }
@@ -280,11 +252,25 @@ describe('Config Module', () => {
       resetConfig();
       expect(getConfig().autoOpen).toBe(false);
     });
+  });
 
-    it('should use NND_USE_PUPPETEER from environment', () => {
-      process.env.NND_USE_PUPPETEER = 'true';
+  describe('Browser Window Configuration', () => {
+    it('should use NND_BROWSER_WIDTH from environment', () => {
+      process.env.NND_BROWSER_WIDTH = '1920';
       resetConfig();
-      expect(getConfig().usePuppeteer).toBe(true);
+      expect(getConfig().browserWindowSize?.width).toBe(1920);
+    });
+
+    it('should use NND_BROWSER_HEIGHT from environment', () => {
+      process.env.NND_BROWSER_HEIGHT = '1080';
+      resetConfig();
+      expect(getConfig().browserWindowSize?.height).toBe(1080);
+    });
+
+    it('should use NND_BROWSER_TITLE from environment', () => {
+      process.env.NND_BROWSER_TITLE = 'My DevTools';
+      resetConfig();
+      expect(getConfig().browserWindowTitle).toBe('My DevTools');
     });
   });
 });

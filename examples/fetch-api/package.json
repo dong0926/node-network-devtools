@@ -4,8 +4,9 @@
   "description": "Fetch API 请求监听示例",
   "type": "module",
   "scripts": {
-    "start": "npx node-network-devtools index.js",
-    "start:gui": "npx node-network-devtools --gui index.js"
+    "start": "node --import ../../dist/esm/register.js index.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
 }

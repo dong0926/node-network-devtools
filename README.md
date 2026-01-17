@@ -14,12 +14,37 @@
 
 ---
 
+## ⚠️ Development Tool Only
+
+**This tool is designed for development environments only. Do NOT use in production!**
+
+- Uses Puppeteer to launch a minimal browser window for the GUI
+- Intercepts all network requests which may impact performance
+- Stores request/response data in memory
+- Not suitable for production workloads
+
+### Disabling in Production
+
+```javascript
+// Conditional installation
+if (process.env.NODE_ENV === 'development') {
+  await install();
+}
+```
+
+Or use environment variables:
+
+```bash
+# Disable GUI and auto-open
+NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
+```
+
 ## ✨ Features
 
 - 🔍 **Dual Interception** - Supports both `http/https` modules and `undici/fetch` API
 - 🎯 **Zero Intrusion** - Auto-inject via `-r` or `--import`, no code changes needed
-- 📊 **DevTools Integration** - View all requests in Chrome DevTools Network panel
-- 🖥️ **Built-in Web GUI** - Chrome DevTools-like interface with real-time updates
+- 🖥️ **Minimal Browser Window** - Puppeteer-powered compact GUI window (800x600)
+- 📊 **Built-in Web GUI** - Chrome DevTools-like interface with real-time updates
 - 🔗 **Request Tracing** - AsyncLocalStorage-based request correlation
 - 🛡️ **Security** - Auto-redact sensitive headers (Authorization, Cookie, etc.)
 - ⚡ **Next.js Compatible** - Preserves `next.revalidate`, `next.tags` options
@@ -38,12 +63,14 @@
 ### Installation
 
 ```bash
-npm install node-network-devtools
+npm install node-network-devtools puppeteer
 # or
-pnpm add node-network-devtools
+pnpm add node-network-devtools puppeteer
 # or
-yarn add node-network-devtools
+yarn add node-network-devtools puppeteer
 ```
+
+**Note**: Puppeteer is required for the GUI browser window. If not installed, you'll see a friendly error message with installation instructions.
 
 ### Usage
 
@@ -55,12 +82,12 @@ npx node-network-devtools your-script.js
 npx nnd your-script.js
 ```
 
-The CLI automatically adds the `--inspect` flag and injects the interceptor.
+The CLI automatically injects the interceptor and opens the GUI.
 
 #### Method 2: Using `-r` flag
 
 ```bash
-node --inspect -r node-network-devtools/register your-script.js
+node -r node-network-devtools/register your-script.js
 ```
 
 #### Method 3: Programmatic
@@ -80,12 +107,28 @@ const app = express();
 
 After starting your application:
 
-1. **Web GUI** (Default): A browser window will automatically open showing the GUI
-2. **Chrome DevTools**: Open Chrome and navigate to `chrome://inspect`, then click "Open dedicated DevTools for Node"
+- **Web GUI** (Default): A minimal browser window will automatically open showing the GUI
+  - Compact window size (800x600 by default)
+  - Customizable window size and title
+  - No browser chrome or toolbars (app mode)
+
+To manually access the GUI, look for the URL in the console output:
+```
+🚀 Node Network DevTools GUI started at http://localhost:9229
+```
 
 ## 🖥️ Web GUI
 
 The built-in Web GUI provides a Chrome DevTools-like experience for monitoring network requests.
+
+### Minimal Browser Window
+
+The GUI opens in a minimal Puppeteer-controlled browser window:
+
+- **Compact Size**: Default 800x600, customizable via environment variables
+- **App Mode**: No browser chrome, toolbars, or address bar
+- **Custom Title**: Shows "Node Network DevTools" by default
+- **Fast Launch**: Opens in under 3 seconds
 
 ### Features
 
@@ -99,6 +142,12 @@ The built-in Web GUI provides a Chrome DevTools-like experience for monitoring n
 ### GUI Configuration
 
 ```bash
+# Customize window size
+NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 npx nnd your-script.js
+
+# Customize window title
+NND_BROWSER_TITLE="My App Network Monitor" npx nnd your-script.js
+
 # Specify GUI port
 NND_GUI_PORT=9230 npx nnd your-script.js
 
@@ -125,7 +174,6 @@ NND_AUTO_OPEN=false npx nnd your-script.js
 | `NND_INTERCEPT_HTTP` | Intercept http/https | true |
 | `NND_INTERCEPT_UNDICI` | Intercept undici/fetch | true |
 | `NND_REDACT_HEADERS` | Headers to redact (comma-separated) | authorization,cookie |
-| `NND_AUTO_CONNECT` | Auto-connect to CDP | true |
 
 #### GUI Settings
 
@@ -135,6 +183,9 @@ NND_AUTO_OPEN=false npx nnd your-script.js
 | `NND_GUI_PORT` | GUI server port | auto |
 | `NND_WS_PORT` | WebSocket port | auto |
 | `NND_AUTO_OPEN` | Auto-open browser | true |
+| `NND_BROWSER_WIDTH` | Browser window width | 800 |
+| `NND_BROWSER_HEIGHT` | Browser window height | 600 |
+| `NND_BROWSER_TITLE` | Browser window title | Node Network DevTools |
 
 ### Programmatic Configuration
 
@@ -147,7 +198,28 @@ setConfig({
   redactHeaders: ['authorization', 'cookie', 'x-api-key'],
   guiEnabled: true,
   autoOpen: false,
+  browserWindowSize: { width: 1024, height: 768 },
+  browserWindowTitle: 'My App Network Monitor',
 });
+```
+
+### Disabling in Production
+
+**Important**: Always disable this tool in production environments!
+
+```typescript
+// Conditional installation based on environment
+if (process.env.NODE_ENV === 'development') {
+  const { install } = await import('node-network-devtools');
+  await install();
+}
+```
+
+Or use environment variables:
+
+```bash
+# In production, disable GUI and auto-open
+NODE_ENV=production NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
 ```
 
 ## 🎯 Framework Integration
@@ -165,10 +237,10 @@ module.exports = {
 };
 ```
 
-3. Start with `--inspect`:
+3. Start your development server:
 
 ```bash
-NODE_OPTIONS='--inspect' npm run dev
+npm run dev
 ```
 
 Or configure in `package.json`:
@@ -176,10 +248,12 @@ Or configure in `package.json`:
 ```json
 {
   "scripts": {
-    "dev:debug": "NODE_OPTIONS='--inspect' next dev"
+    "dev": "next dev"
   }
 }
 ```
+
+**Note**: The tool will automatically start when Next.js loads the instrumentation hook.
 
 ### Express
 
@@ -220,9 +294,6 @@ import {
 
 // Interceptors
 import { HttpPatcher, UndiciPatcher } from 'node-network-devtools';
-
-// CDP Bridge
-import { getCDPBridge, isInspectorEnabled } from 'node-network-devtools';
 ```
 
 ### Request Tracing
@@ -258,9 +329,9 @@ Check the [examples](./examples) directory for more usage examples:
 
 1. **HTTP Interception**: Uses `@mswjs/interceptors` to intercept http/https module requests
 2. **Undici Interception**: Uses `Agent.compose()` to register interceptors for fetch requests
-3. **CDP Bridge**: Connects to V8 Inspector via `node:inspector` module and sends Network domain events
-4. **Context Propagation**: Uses `AsyncLocalStorage` to pass TraceID through async call chains
-5. **Event Bridge**: Forwards intercepted requests to WebSocket clients for real-time GUI updates
+3. **Context Propagation**: Uses `AsyncLocalStorage` to pass TraceID through async call chains
+4. **Event Bridge**: Forwards intercepted requests to WebSocket clients for real-time GUI updates
+5. **Minimal Browser**: Uses Puppeteer to launch a compact browser window in app mode
 
 ## 🤝 Contributing
 
@@ -292,6 +363,7 @@ MIT © [ddddd](https://github.com/dong0926)
 - [@mswjs/interceptors](https://github.com/mswjs/interceptors) - HTTP request interception
 - [undici](https://github.com/nodejs/undici) - HTTP/1.1 client
 - [ws](https://github.com/websockets/ws) - WebSocket implementation
+- [puppeteer](https://github.com/puppeteer/puppeteer) - Browser automation
 
 ## 📮 Support
 

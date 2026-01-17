@@ -4,8 +4,9 @@
   "description": "请求追踪示例 - 使用 TraceID 关联请求",
   "type": "module",
   "scripts": {
-    "start": "npx node-network-devtools index.js",
-    "start:gui": "npx node-network-devtools --gui index.js"
+    "start": "node --import ../../dist/esm/register.js index.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
 }

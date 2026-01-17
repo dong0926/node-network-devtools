@@ -4,14 +4,14 @@
   "description": "Next.js App Router 网络监听示例",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--inspect next dev",
-    "dev:gui": "cross-env NODE_OPTIONS=--inspect NND_GUI_ENABLED=true next dev",
+    "dev": "next dev",
     "build": "next build",
-    "start": "cross-env NODE_OPTIONS=--inspect next start",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "next": "^14.0.0",
+    "puppeteer": "^23.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

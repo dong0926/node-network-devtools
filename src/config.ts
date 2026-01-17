@@ -5,6 +5,16 @@
  */
 
 /**
+ * 浏览器窗口大小配置
+ */
+export interface BrowserWindowSize {
+  /** 窗口宽度（像素） */
+  width: number;
+  /** 窗口高度（像素） */
+  height: number;
+}
+
+/**
  * 工具配置接口
  */
 export interface Config {
@@ -30,12 +40,6 @@ export interface Config {
   /** 是否禁用 body 捕获，默认 false */
   disableBodyCapture: boolean;
 
-  // CDP 配置
-  /** 是否自动连接 inspector，默认 true */
-  autoConnect: boolean;
-  /** 指定 inspector 端口 */
-  inspectorPort?: number;
-
   // GUI 配置
   /** 是否启用 GUI 服务器，默认 true */
   guiEnabled: boolean;
@@ -47,8 +51,12 @@ export interface Config {
   guiHost: string;
   /** 是否自动打开浏览器，默认 true */
   autoOpen: boolean;
-  /** 是否使用 Puppeteer 打开浏览器，默认 false */
-  usePuppeteer: boolean;
+  
+  // 浏览器窗口配置
+  /** 浏览器窗口大小，默认 { width: 800, height: 600 } */
+  browserWindowSize?: BrowserWindowSize;
+  /** 浏览器窗口标题，默认 "Node Network DevTools" */
+  browserWindowTitle?: string;
 }
 
 /**
@@ -62,15 +70,18 @@ const defaultConfig: Config = {
   ignoreUrls: [],
   redactHeaders: ['authorization', 'cookie'],
   disableBodyCapture: false,
-  autoConnect: true,
-  inspectorPort: undefined,
   // GUI 配置默认值
   guiEnabled: true,
   guiPort: 'auto',
   wsPort: 'auto',
   guiHost: '127.0.0.1',
   autoOpen: true,
-  usePuppeteer: false,
+  // 浏览器窗口默认配置
+  browserWindowSize: {
+    width: 800,
+    height: 600,
+  },
+  browserWindowTitle: 'Node Network DevTools',
 };
 
 /**
@@ -129,15 +140,18 @@ function loadFromEnv(): Partial<Config> {
     interceptUndici: parseEnvBoolean(env.NND_INTERCEPT_UNDICI, defaultConfig.interceptUndici),
     redactHeaders: parseEnvStringArray(env.NND_REDACT_HEADERS, defaultConfig.redactHeaders),
     disableBodyCapture: parseEnvBoolean(env.NND_DISABLE_BODY_CAPTURE, defaultConfig.disableBodyCapture),
-    autoConnect: parseEnvBoolean(env.NND_AUTO_CONNECT, defaultConfig.autoConnect),
-    inspectorPort: env.NND_INSPECTOR_PORT ? parseEnvNumber(env.NND_INSPECTOR_PORT, 0) : undefined,
     // GUI 配置
     guiEnabled: parseEnvBoolean(env.NND_GUI_ENABLED, defaultConfig.guiEnabled),
     guiPort: parseEnvPort(env.NND_GUI_PORT, defaultConfig.guiPort),
     wsPort: parseEnvPort(env.NND_WS_PORT, defaultConfig.wsPort),
     guiHost: env.NND_GUI_HOST || defaultConfig.guiHost,
     autoOpen: parseEnvBoolean(env.NND_AUTO_OPEN, defaultConfig.autoOpen),
-    usePuppeteer: parseEnvBoolean(env.NND_USE_PUPPETEER, defaultConfig.usePuppeteer),
+    // 浏览器窗口配置
+    browserWindowSize: {
+      width: parseEnvNumber(env.NND_BROWSER_WIDTH, defaultConfig.browserWindowSize?.width ?? 800),
+      height: parseEnvNumber(env.NND_BROWSER_HEIGHT, defaultConfig.browserWindowSize?.height ?? 600),
+    },
+    browserWindowTitle: env.NND_BROWSER_TITLE || defaultConfig.browserWindowTitle,
   };
 }
 

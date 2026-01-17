@@ -5,6 +5,7 @@
 ## 📋 目录
 
 - [安装问题](#安装问题)
+- [Puppeteer 问题](#puppeteer-问题)
 - [启动问题](#启动问题)
 - [请求监控问题](#请求监控问题)
 - [GUI 问题](#gui-问题)
@@ -54,25 +55,135 @@ Cannot find module 'node-network-devtools' or its corresponding type declaration
    npm install node-network-devtools@latest
    ```
 
-## 启动问题
-
-### 问题：Inspector is not enabled
+### 问题：Puppeteer 安装失败
 
 **症状：**
-```
-Error: Inspector is not enabled
+```bash
+ERROR: Failed to set up Chromium
 ```
 
 **解决方案：**
-必须使用 `--inspect` 标志启动：
+1. 使用国内镜像：
+   ```bash
+   PUPPETEER_DOWNLOAD_HOST=https://npmmirror.com/mirrors pnpm add puppeteer
+   ```
+
+2. 跳过 Chromium 下载：
+   ```bash
+   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true pnpm add puppeteer
+   ```
+
+3. 手动指定 Chromium 路径：
+   ```bash
+   PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium pnpm add puppeteer
+   ```
+
+## Puppeteer 问题
+
+### 问题：Puppeteer not installed
+
+**症状：**
+```
+Error: Puppeteer is not installed. Please install it to use the GUI browser window.
+```
+
+**解决方案：**
+1. 安装 Puppeteer：
+   ```bash
+   pnpm add puppeteer
+   ```
+
+2. 或禁用 GUI：
+   ```bash
+   NND_GUI_ENABLED=false node your-script.js
+   ```
+
+3. 或禁用自动打开（手动访问 URL）：
+   ```bash
+   NND_AUTO_OPEN=false node your-script.js
+   ```
+
+### 问题：Puppeteer 启动失败
+
+**症状：**
+```
+Error: Failed to launch the browser process
+```
+
+**解决方案：**
+
+**Linux 系统：**
+安装必需的系统依赖：
+```bash
+# Ubuntu/Debian
+sudo apt-get install -y \
+  libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+  libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
+  libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2
+
+# CentOS/RHEL
+sudo yum install -y \
+  nss atk at-spi2-atk cups-libs libdrm libXcomposite \
+  libXdamage libXrandr mesa-libgbm alsa-lib
+```
+
+**Docker 容器：**
+```dockerfile
+FROM node:18
+
+# 安装 Chromium 和依赖
+RUN apt-get update && apt-get install -y \
+    chromium \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 或者禁用 GUI
+ENV NND_GUI_ENABLED=false
+ENV NND_AUTO_OPEN=false
+```
+
+**权限问题：**
+工具会自动添加 `--no-sandbox` 参数，但如果仍有问题：
+```bash
+# 临时解决方案（不推荐用于生产）
+NND_AUTO_OPEN=false node your-script.js
+```
+
+### 问题：浏览器窗口太小/太大
+
+**解决方案：**
+自定义窗口大小：
 
 ```bash
-# 正确
-node --inspect your-script.js
+# 环境变量
+NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 npx nnd your-script.js
 
-# 或使用 CLI（自动添加）
-npx nnd your-script.js
+# 或编程配置
+setConfig({
+  browserWindowSize: { width: 1280, height: 720 }
+});
 ```
+
+### 问题：在 CI 环境中 Puppeteer 失败
+
+**解决方案：**
+CI 环境中禁用 GUI：
+
+```yaml
+# GitHub Actions
+- name: Run tests
+  env:
+    CI: true
+    NND_GUI_ENABLED: false
+    NND_AUTO_OPEN: false
+  run: npm test
+```
+
+工具会自动检测 CI 环境变量（`CI=true`）并禁用自动打开。
+
+## 启动问题
 
 ### 问题：端口被占用
 
@@ -119,18 +230,13 @@ Error: Cannot find module 'node-network-devtools'
 ### 问题：看不到任何请求
 
 **可能原因：**
-1. 未使用 `--inspect` 标志
-2. 未在发起请求前调用 `install()`
-3. 使用了不支持的 HTTP 客户端
+1. 未在发起请求前调用 `install()`
+2. 使用了不支持的 HTTP 客户端
+3. 拦截器未启用
 
 **解决方案：**
 
-1. **检查 --inspect 标志：**
-   ```bash
-   node --inspect your-script.js
-   ```
-
-2. **确保正确初始化：**
+1. **确保正确初始化：**
    ```typescript
    import { install } from 'node-network-devtools';
    
@@ -141,9 +247,14 @@ Error: Cannot find module 'node-network-devtools'
    await fetch('https://api.example.com/data');
    ```
 
-3. **检查 HTTP 客户端兼容性：**
+2. **检查 HTTP 客户端兼容性：**
    - ✅ 支持：http/https 模块、fetch API、undici
    - ❌ 不支持：axios、got、request
+
+3. **检查拦截器配置：**
+   ```bash
+   NND_INTERCEPT_HTTP=true NND_INTERCEPT_UNDICI=true node your-script.js
+   ```
 
 ### 问题：部分请求看不到
 
@@ -173,8 +284,9 @@ axios 使用自己的 HTTP 实现，目前不支持拦截。
 
 **可能原因：**
 1. 设置了 `NND_AUTO_OPEN=false`
-2. 没有安装浏览器
-3. 权限问题
+2. Puppeteer 未安装
+3. Puppeteer 启动失败
+4. 在 CI 环境中运行
 
 **解决方案：**
 1. 检查环境变量：
@@ -182,12 +294,17 @@ axios 使用自己的 HTTP 实现，目前不支持拦截。
    echo $NND_AUTO_OPEN
    ```
 
-2. 手动访问 URL（查看控制台输出）：
-   ```
-   [GUI Server] GUI 服务器运行在: http://localhost:9229
+2. 确保安装了 Puppeteer：
+   ```bash
+   pnpm add puppeteer
    ```
 
-3. 确保安装了 Chrome、Edge 或 Firefox
+3. 手动访问 URL（查看控制台输出）：
+   ```
+   🚀 Node Network DevTools GUI started at http://localhost:9229
+   ```
+
+4. 检查 Puppeteer 错误信息（查看控制台）
 
 ### 问题：GUI 显示空白页面
 
@@ -278,7 +395,7 @@ Next.js 14+ 使用了自定义的 fetch 实现，绕过了 undici 的全局 disp
 
 **可能原因：**
 1. 未启用 `instrumentationHook`
-2. 未使用 `--inspect` 标志
+2. instrumentation 文件位置错误
 
 **解决方案：**
 1. 在 `next.config.js` 中启用：
@@ -290,10 +407,14 @@ Next.js 14+ 使用了自定义的 fetch 实现，绕过了 undici 的全局 disp
    };
    ```
 
-2. 使用 `NODE_OPTIONS` 启动：
+2. 确保 `instrumentation.ts` 在项目根目录
+
+3. 启动开发服务器：
    ```bash
-   NODE_OPTIONS='--inspect' npm run dev
+   npm run dev
    ```
+
+**注意**：0.2.x 版本不再需要 `--inspect` 标志。
 
 ### 问题：Express 中间件请求看不到
 
@@ -369,25 +490,52 @@ const app = express();
 ### 问题：在 Docker 中无法访问 GUI
 
 **原因：**
-端口未暴露或主机绑定错误。
+端口未暴露或 Puppeteer 依赖缺失。
 
 **解决方案：**
-1. 暴露端口：
-   ```dockerfile
-   EXPOSE 9229 9230
-   ```
 
-2. 绑定到 0.0.0.0：
-   ```bash
-   docker run -p 9229:9229 -p 9230:9230 \
-     -e NND_GUI_HOST=0.0.0.0 \
-     your-image
-   ```
+**方式 1：禁用 GUI（推荐）**
+```dockerfile
+FROM node:18
 
-3. 启动时使用正确的 inspect 地址：
-   ```bash
-   node --inspect=0.0.0.0:9229 your-script.js
-   ```
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+
+ENV NND_GUI_ENABLED=false
+ENV NND_AUTO_OPEN=false
+
+COPY . .
+CMD ["node", "your-script.js"]
+```
+
+**方式 2：启用 GUI（需要安装依赖）**
+```dockerfile
+FROM node:18
+
+# 安装 Chromium 和依赖
+RUN apt-get update && apt-get install -y \
+    chromium \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+
+# 暴露端口
+EXPOSE 9229 9230
+
+COPY . .
+CMD ["node", "your-script.js"]
+```
+
+启动容器：
+```bash
+docker run -p 9229:9229 -p 9230:9230 your-image
+```
 
 ## Windows 特定问题
 

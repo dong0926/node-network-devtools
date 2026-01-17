@@ -40,6 +40,7 @@
     "clean": "rimraf dist",
     "format": "prettier --write \"src/**/*.{ts,js,json}\" \"packages/**/*.{ts,tsx,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\" \"packages/**/*.{ts,tsx,js,json}\"",
+    "postinstall": "node scripts/check-puppeteer.cjs",
     "prepublishOnly": "pnpm clean && pnpm build && pnpm test:all",
     "prepack": "pnpm build",
     "release:patch": "npm version patch && git push --follow-tags",
@@ -85,6 +86,7 @@
     "@types/ws": "^8.5.13",
     "fast-check": "^3.15.0",
     "prettier": "^3.1.0",
+    "puppeteer": "^23.0.0",
     "rimraf": "^5.0.5",
     "tsx": "^4.21.0",
     "typescript": "^5.3.0",
@@ -93,11 +95,15 @@
   "dependencies": {
     "@mswjs/interceptors": "^0.40.0",
     "nanoid": "^5.0.4",
-    "open": "^10.1.0",
     "undici": "^7.18.2",
     "ws": "^8.18.0"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
     "puppeteer": "^23.0.0"
+  },
+  "peerDependenciesMeta": {
+    "puppeteer": {
+      "optional": true
+    }
   }
 }

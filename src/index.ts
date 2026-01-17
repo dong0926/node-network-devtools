@@ -47,20 +47,6 @@ export { HttpPatcher } from './interceptors/http-patcher.js';
 // Undici/Fetch 拦截器
 export { UndiciPatcher } from './interceptors/undici-patcher.js';
 
-// CDP 桥接
-export {
-  getCDPBridge,
-  resetCDPBridge,
-  createCDPBridge,
-  isInspectorEnabled,
-  getInspectorUrl,
-  type ICDPBridge,
-  type CDPCallFrame,
-  type CDPStackTrace,
-  type CDPRequest,
-  type CDPResponse,
-} from './cdp/cdp-bridge.js';
-
 // Next.js 适配器
 export {
   NextJsAdapter,
@@ -111,7 +97,6 @@ export {
 export {
   openBrowser,
   closeBrowser,
-  type BrowserLauncherOptions,
 } from './gui/browser-launcher.js';
 
 // 端口工具
@@ -123,13 +108,12 @@ export {
 /**
  * 快速初始化函数
  * 
- * 一键安装所有拦截器并连接 CDP Bridge
+ * 一键安装所有拦截器
  */
 export async function install(): Promise<void> {
   const { getConfig } = await import('./config.js');
   const { HttpPatcher } = await import('./interceptors/http-patcher.js');
   const { UndiciPatcher } = await import('./interceptors/undici-patcher.js');
-  const { getCDPBridge } = await import('./cdp/cdp-bridge.js');
 
   const config = getConfig();
 
@@ -139,11 +123,6 @@ export async function install(): Promise<void> {
 
   if (config.interceptUndici) {
     UndiciPatcher.install();
-  }
-
-  if (config.autoConnect) {
-    const bridge = getCDPBridge();
-    await bridge.connect();
   }
 }
 
@@ -159,10 +138,12 @@ export async function startGUI(options?: {
   host?: string;
   autoOpen?: boolean;
 }): Promise<{ url: string; guiPort: number; wsPort: number }> {
+  const { getConfig } = await import('./config.js');
   const { getGUIServer } = await import('./gui/server.js');
   const { getEventBridge } = await import('./gui/event-bridge.js');
   const { openBrowser } = await import('./gui/browser-launcher.js');
 
+  const config = getConfig();
   const guiServer = getGUIServer();
   const result = await guiServer.start({
     guiPort: options?.guiPort ?? 'auto',
@@ -174,8 +155,9 @@ export async function startGUI(options?: {
   const eventBridge = getEventBridge();
   eventBridge.start();
 
-  // 自动打开浏览器
-  if (options?.autoOpen !== false) {
+  // 自动打开浏览器（优先使用 options，否则使用配置）
+  const shouldAutoOpen = options?.autoOpen !== undefined ? options.autoOpen : config.autoOpen;
+  if (shouldAutoOpen) {
     await openBrowser(result.url);
   }
 

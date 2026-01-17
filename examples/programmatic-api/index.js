@@ -5,7 +5,7 @@
  * 而不是通过 CLI 或 -r 标志
  * 
  * 运行方式：
- *   node --inspect index.js
+ *   node index.js
  */
 
 // 从源码导入（实际使用时从 'node-network-devtools' 导入）
@@ -14,22 +14,18 @@ import {
   setConfig,
   getConfig,
   getRequestStore,
-  HttpPatcher,
-  UndiciPatcher,
-  isInspectorEnabled,
+  startGUI,
 } from '../../src/index.js';
 
 async function main() {
   console.log('编程式 API 示例\n');
-
-  // 检查 Inspector 状态
-  console.log('Inspector 已启用:', isInspectorEnabled());
   
   // 自定义配置
   setConfig({
     maxRequests: 100,
     maxBodySize: 256 * 1024, // 256KB
     redactHeaders: ['authorization', 'cookie', 'x-api-key'],
+    browserWindowSize: { width: 1200, height: 800 },
   });
   
   console.log('当前配置:', getConfig());
@@ -39,7 +35,11 @@ async function main() {
   await install();
   console.log('✓ 拦截器已安装\n');
 
-  // 发起一些请求
+  // 启动 GUI（可选）
+  const { url } = await startGUI();
+  console.log(`✓ GUI 已启动: ${url}\n`);
+
+  // 发起一些测试请求
   console.log('发起测试请求...');
   
   await fetch('https://jsonplaceholder.typicode.com/posts/1');
@@ -70,7 +70,6 @@ async function main() {
     console.log(`   TraceID: ${req.traceId}`);
   });
 
-
   // 使用查询功能
   console.log('\n=== 查询示例 ===');
   
@@ -80,7 +79,8 @@ async function main() {
   const userRequests = store.query({ urlPattern: /users/ });
   console.log(`包含 "users" 的请求: ${userRequests.length}`);
 
-  console.log('\n完成！如果使用 --inspect 启动，可以在 DevTools 中查看请求');
+  console.log('\n完成！可以在浏览器窗口中查看所有请求');
 }
 
 main().catch(console.error);
+

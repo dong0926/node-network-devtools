@@ -14,14 +14,39 @@
 
 ---
 
+## ⚠️ 仅限开发环境使用
+
+**本工具仅用于开发环境，请勿在生产环境中使用！**
+
+- 使用 Puppeteer 启动极简浏览器窗口显示 GUI
+- 拦截所有网络请求可能影响性能
+- 在内存中存储请求/响应数据
+- 不适合生产环境工作负载
+
+### 在生产环境中禁用
+
+```javascript
+// 条件安装
+if (process.env.NODE_ENV === 'development') {
+  await install();
+}
+```
+
+或使用环境变量：
+
+```bash
+# 禁用 GUI 和自动打开
+NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
+```
+
 ## ✨ 特性
 
-- 🔍 **双栈拦截** - 同时支持 `http/https` 模块和 `undici/fetch` API
-- 🎯 **零侵入** - 通过 `-r` 或 `--import` 自动注入，无需修改业务代码
-- 📊 **DevTools 集成** - 在 Chrome DevTools Network 面板中查看所有请求
-- 🖥️ **内置 Web GUI** - 类似 Chrome DevTools 的 Web 界面，实时更新
+- 🔍 **双重拦截** - 同时支持 `http/https` 模块和 `undici/fetch` API
+- 🎯 **零侵入** - 通过 `-r` 或 `--import` 自动注入，无需修改代码
+- 🖥️ **极简浏览器窗口** - Puppeteer 驱动的紧凑 GUI 窗口（800x600）
+- 📊 **内置 Web GUI** - 类似 Chrome DevTools 的界面，实时更新
 - 🔗 **请求追踪** - 基于 AsyncLocalStorage 的请求关联
-- 🛡️ **安全脱敏** - 自动脱敏敏感头（Authorization、Cookie 等）
+- 🛡️ **安全性** - 自动脱敏敏感请求头（Authorization、Cookie 等）
 - ⚡ **Next.js 兼容** - 保留 `next.revalidate`、`next.tags` 等选项
 - 📦 **TypeScript** - 完整的 TypeScript 支持和类型定义
 
@@ -38,12 +63,14 @@
 ### 安装
 
 ```bash
-npm install node-network-devtools
+npm install node-network-devtools puppeteer
 # 或
-pnpm add node-network-devtools
+pnpm add node-network-devtools puppeteer
 # 或
-yarn add node-network-devtools
+yarn add node-network-devtools puppeteer
 ```
+
+**注意**：Puppeteer 是 GUI 浏览器窗口所必需的。如果未安装，您会看到友好的错误消息和安装指引。
 
 ### 使用
 
@@ -55,12 +82,12 @@ npx node-network-devtools your-script.js
 npx nnd your-script.js
 ```
 
-CLI 会自动添加 `--inspect` 标志并注入拦截器。
+CLI 会自动注入拦截器并打开 GUI。
 
 #### 方式二：使用 `-r` 标志
 
 ```bash
-node --inspect -r node-network-devtools/register your-script.js
+node -r node-network-devtools/register your-script.js
 ```
 
 #### 方式三：编程方式
@@ -80,18 +107,34 @@ const app = express();
 
 启动应用后：
 
-1. **Web GUI**（默认）：浏览器会自动打开显示 GUI 界面
-2. **Chrome DevTools**：打开 Chrome 浏览器，访问 `chrome://inspect`，然后点击 "Open dedicated DevTools for Node"
+- **Web GUI**（默认）：极简浏览器窗口会自动打开显示 GUI
+  - 紧凑的窗口大小（默认 800x600）
+  - 可自定义窗口大小和标题
+  - 无浏览器工具栏或地址栏（app 模式）
+
+要手动访问 GUI，请查看控制台输出中的 URL：
+```
+🚀 Node Network DevTools GUI started at http://localhost:9229
+```
 
 ## 🖥️ Web GUI
 
 内置的 Web GUI 提供类似 Chrome DevTools 的网络请求监控体验。
 
+### 极简浏览器窗口
+
+GUI 在极简的 Puppeteer 控制的浏览器窗口中打开：
+
+- **紧凑尺寸**：默认 800x600，可通过环境变量自定义
+- **App 模式**：无浏览器工具栏、地址栏或其他界面元素
+- **自定义标题**：默认显示 "Node Network DevTools"
+- **快速启动**：3 秒内打开
+
 ### 功能特性
 
 - 📋 **请求列表** - 实时显示所有网络请求
 - 🔍 **搜索过滤** - 按 URL、方法、状态码和类型过滤
-- 📝 **详情面板** - 查看请求头、请求体、响应体和时序信息
+- 📝 **详情面板** - 查看请求头、请求体、响应和时序信息
 - 🎨 **主题切换** - 支持深色/浅色主题
 - ⏸️ **暂停/恢复** - 暂停请求捕获以便分析
 - 🔄 **实时更新** - 基于 WebSocket 的实时更新
@@ -99,6 +142,12 @@ const app = express();
 ### GUI 配置
 
 ```bash
+# 自定义窗口大小
+NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 npx nnd your-script.js
+
+# 自定义窗口标题
+NND_BROWSER_TITLE="我的应用网络监控" npx nnd your-script.js
+
 # 指定 GUI 端口
 NND_GUI_PORT=9230 npx nnd your-script.js
 
@@ -125,7 +174,6 @@ NND_AUTO_OPEN=false npx nnd your-script.js
 | `NND_INTERCEPT_HTTP` | 拦截 http/https | true |
 | `NND_INTERCEPT_UNDICI` | 拦截 undici/fetch | true |
 | `NND_REDACT_HEADERS` | 要脱敏的头（逗号分隔） | authorization,cookie |
-| `NND_AUTO_CONNECT` | 自动连接 CDP | true |
 
 #### GUI 设置
 
@@ -135,6 +183,9 @@ NND_AUTO_OPEN=false npx nnd your-script.js
 | `NND_GUI_PORT` | GUI 服务器端口 | 自动 |
 | `NND_WS_PORT` | WebSocket 端口 | 自动 |
 | `NND_AUTO_OPEN` | 自动打开浏览器 | true |
+| `NND_BROWSER_WIDTH` | 浏览器窗口宽度 | 800 |
+| `NND_BROWSER_HEIGHT` | 浏览器窗口高度 | 600 |
+| `NND_BROWSER_TITLE` | 浏览器窗口标题 | Node Network DevTools |
 
 ### 编程配置
 
@@ -147,7 +198,28 @@ setConfig({
   redactHeaders: ['authorization', 'cookie', 'x-api-key'],
   guiEnabled: true,
   autoOpen: false,
+  browserWindowSize: { width: 1024, height: 768 },
+  browserWindowTitle: '我的应用网络监控',
 });
+```
+
+### 在生产环境中禁用
+
+**重要**：始终在生产环境中禁用此工具！
+
+```typescript
+// 根据环境条件安装
+if (process.env.NODE_ENV === 'development') {
+  const { install } = await import('node-network-devtools');
+  await install();
+}
+```
+
+或使用环境变量：
+
+```bash
+# 在生产环境中，禁用 GUI 和自动打开
+NODE_ENV=production NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
 ```
 
 ## 🎯 框架集成
@@ -165,10 +237,10 @@ module.exports = {
 };
 ```
 
-3. 使用 `--inspect` 启动：
+3. 启动开发服务器：
 
 ```bash
-NODE_OPTIONS='--inspect' npm run dev
+npm run dev
 ```
 
 或在 `package.json` 中配置：
@@ -176,10 +248,12 @@ NODE_OPTIONS='--inspect' npm run dev
 ```json
 {
   "scripts": {
-    "dev:debug": "NODE_OPTIONS='--inspect' next dev"
+    "dev": "next dev"
   }
 }
 ```
+
+**注意**：当 Next.js 加载 instrumentation hook 时，工具会自动启动。
 
 ### Express
 
@@ -220,9 +294,6 @@ import {
 
 // 拦截器
 import { HttpPatcher, UndiciPatcher } from 'node-network-devtools';
-
-// CDP 桥接
-import { getCDPBridge, isInspectorEnabled } from 'node-network-devtools';
 ```
 
 ### 请求追踪
@@ -258,9 +329,9 @@ const requests = store.getByTraceId('user-login');
 
 1. **HTTP 拦截**：使用 `@mswjs/interceptors` 拦截 http/https 模块请求
 2. **Undici 拦截**：使用 `Agent.compose()` 注册拦截器捕获 fetch 请求
-3. **CDP 桥接**：通过 `node:inspector` 模块连接到 V8 Inspector 并发送 Network 域事件
-4. **上下文传递**：使用 `AsyncLocalStorage` 在异步调用链中传递 TraceID
-5. **事件桥接**：将拦截的请求转发到 WebSocket 客户端以实现 GUI 实时更新
+3. **上下文传递**：使用 `AsyncLocalStorage` 在异步调用链中传递 TraceID
+4. **事件桥接**：将拦截的请求转发到 WebSocket 客户端以实现 GUI 实时更新
+5. **极简浏览器**：使用 Puppeteer 在 app 模式下启动紧凑的浏览器窗口
 
 ## 🤝 贡献
 
@@ -292,6 +363,7 @@ MIT © [ddddd](https://github.com/dong0926)
 - [@mswjs/interceptors](https://github.com/mswjs/interceptors) - HTTP 请求拦截
 - [undici](https://github.com/nodejs/undici) - HTTP/1.1 客户端
 - [ws](https://github.com/websockets/ws) - WebSocket 实现
+- [puppeteer](https://github.com/puppeteer/puppeteer) - 浏览器自动化
 
 ## 📮 支持
 
