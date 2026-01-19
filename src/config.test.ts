@@ -30,6 +30,7 @@ describe('Config Module', () => {
     delete process.env.NND_BROWSER_WIDTH;
     delete process.env.NND_BROWSER_HEIGHT;
     delete process.env.NND_BROWSER_TITLE;
+    delete process.env.NND_BROWSER_PATH;
     resetConfig();
   });
 
@@ -271,6 +272,17 @@ describe('Config Module', () => {
       process.env.NND_BROWSER_TITLE = 'My DevTools';
       resetConfig();
       expect(getConfig().browserWindowTitle).toBe('My DevTools');
+    });
+
+    it('should use NND_BROWSER_PATH from environment', () => {
+      process.env.NND_BROWSER_PATH = '/custom/path/to/browser';
+      resetConfig();
+      expect(getConfig().browserPath).toBe('/custom/path/to/browser');
+    });
+
+    it('should have undefined browserPath by default', () => {
+      resetConfig();
+      expect(getConfig().browserPath).toBeUndefined();
     });
   });
 });

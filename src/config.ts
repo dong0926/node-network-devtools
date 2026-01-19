@@ -57,6 +57,8 @@ export interface Config {
   browserWindowSize?: BrowserWindowSize;
   /** 浏览器窗口标题，默认 "Node Network DevTools" */
   browserWindowTitle?: string;
+  /** 自定义浏览器可执行文件路径，默认自动检测 */
+  browserPath?: string;
 }
 
 /**
@@ -82,6 +84,7 @@ const defaultConfig: Config = {
     height: 600,
   },
   browserWindowTitle: 'Node Network DevTools',
+  browserPath: undefined,
 };
 
 /**
@@ -152,6 +155,7 @@ function loadFromEnv(): Partial<Config> {
       height: parseEnvNumber(env.NND_BROWSER_HEIGHT, defaultConfig.browserWindowSize?.height ?? 600),
     },
     browserWindowTitle: env.NND_BROWSER_TITLE || defaultConfig.browserWindowTitle,
+    browserPath: env.NND_BROWSER_PATH,
   };
 }
 

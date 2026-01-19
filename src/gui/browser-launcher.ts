@@ -1,10 +1,47 @@
 /**
  * 浏览器启动器模块
  * 
- * 使用 Puppeteer 以极简窗口模式打开 GUI
+ * 使用原生浏览器检测和启动机制打开 GUI
  */
 
+import { spawn } from 'child_process';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { nanoid } from 'nanoid';
 import { getConfig } from '../config.js';
+import { detectBrowser } from './browser-detector.js';
+
+/**
+ * 浏览器未检测到错误
+ * 
+ * 当系统中未检测到任何支持的浏览器时抛出此错误
+ */
+export class BrowserNotFoundError extends Error {
+  constructor() {
+    super('未检测到已安装的浏览器');
+    this.name = 'BrowserNotFoundError';
+    // 保持原型链正确（TypeScript 继承 Error 的最佳实践）
+    Object.setPrototypeOf(this, BrowserNotFoundError.prototype);
+  }
+}
+
+/**
+ * 浏览器启动失败错误
+ * 
+ * 当浏览器启动过程中发生错误时抛出此错误
+ */
+export class BrowserLaunchError extends Error {
+  /**
+   * @param message 错误消息
+   * @param cause 原始错误（可选）
+   */
+  constructor(message: string, public readonly cause?: Error) {
+    super(message);
+    this.name = 'BrowserLaunchError';
+    // 保持原型链正确（TypeScript 继承 Error 的最佳实践）
+    Object.setPrototypeOf(this, BrowserLaunchError.prototype);
+  }
+}
 
 /**
  * 浏览器窗口配置
@@ -16,23 +53,12 @@ export interface BrowserWindowConfig {
 }
 
 /**
- * Puppeteer 未安装错误
+ * 浏览器启动选项
  */
-export class PuppeteerNotInstalledError extends Error {
-  constructor(message?: string) {
-    super(message || 'Puppeteer 未安装');
-    this.name = 'PuppeteerNotInstalledError';
-  }
-}
-
-/**
- * Puppeteer 启动失败错误
- */
-export class PuppeteerLaunchError extends Error {
-  constructor(message: string, public readonly cause?: Error) {
-    super(message);
-    this.name = 'PuppeteerLaunchError';
-  }
+export interface BrowserLaunchOptions {
+  url: string;
+  windowConfig: BrowserWindowConfig;
+  userDataDir?: string;
 }
 
 /**
@@ -48,200 +74,233 @@ export interface IBrowserLauncher {
  * 浏览器启动器实现
  */
 class BrowserLauncherImpl implements IBrowserLauncher {
-  private puppeteerBrowser: unknown = null;
-  private puppeteerPage: unknown = null;
   private isOpened: boolean = false;
 
   /**
    * 打开浏览器
+   * 
+   * 执行以下步骤：
+   * 1. 调用 BrowserDetector.detect() 检测浏览器
+   * 2. 处理未找到浏览器的情况
+   * 3. 构建启动参数
+   * 4. 调用启动逻辑
+   * 5. 处理启动失败的情况
+   * 
+   * @param url GUI 访问 URL
+   * 
+   * @remarks
+   * 此方法不会抛出异常，所有错误都会被捕获并显示友好的错误消息。
+   * 这确保浏览器启动失败不会中断主进程。
+   * 
+   * **验证需求：2.5, 4.1, 4.2, 4.3, 4.4, 4.5, 6.1, 6.4**
    */
   async open(url: string): Promise<void> {
-    await this.openWithPuppeteer(url);
-    this.isOpened = true;
+    try {
+      // 步骤 1: 调用 BrowserDetector.detect() 检测浏览器
+      const browserInfo = detectBrowser();
+      
+      // 步骤 2: 处理未找到浏览器的情况
+      if (!browserInfo) {
+        // 浏览器未找到，显示友好提示（需求 6.1）
+        this.handleBrowserNotFound(url);
+        return;
+      }
+      
+      // 获取配置
+      const config = getConfig();
+      const windowConfig: BrowserWindowConfig = {
+        width: config.browserWindowSize?.width || 1280,
+        height: config.browserWindowSize?.height || 800,
+        title: config.browserWindowTitle || 'Node Network DevTools',
+      };
+      
+      // 创建用户数据目录（需求 4.2）
+      const userDataDir = createUserDataDir();
+      
+      // 步骤 3: 构建启动参数（需求 4.1）
+      const args = this.buildLaunchArgs({
+        url,
+        windowConfig,
+        userDataDir,
+      });
+      
+      // 步骤 4: 调用启动逻辑（需求 4.3, 4.4, 4.5）
+      this.launchBrowser(browserInfo.path, args);
+      
+      this.isOpened = true;
+      
+      console.log(`[node-network-devtools] 已使用 ${browserInfo.name} 打开 GUI: ${url}`);
+    } catch (err) {
+      // 步骤 5: 处理启动失败的情况（需求 6.4）
+      this.handleLaunchError(err as Error, url);
+    }
   }
 
   /**
-   * 构建 Puppeteer 启动参数
+   * 启动浏览器进程
+   * 
+   * 使用 child_process.spawn() 启动浏览器，并配置为分离进程。
+   * 这样浏览器进程不会阻塞父进程，父进程退出后浏览器仍可继续运行。
+   * 
+   * @param browserPath 浏览器可执行文件路径
+   * @param args 启动参数数组
+   * @throws {BrowserLaunchError} 当浏览器启动失败时抛出
+   * 
+   * @remarks
+   * 进程配置：
+   * - detached: true - 进程分离，允许父进程退出（需求 4.3）
+   * - stdio: 'ignore' - 忽略标准输入输出，避免管道阻塞（需求 4.4）
+   * - child.unref() - 允许父进程退出而不等待子进程（需求 4.5）
+   * 
+   * **验证需求：4.3, 4.4, 4.5**
    */
-  private buildLaunchArgs(url: string, config: BrowserWindowConfig): string[] {
-    return [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      `--app=${url}`,  // 关键：app 模式，无地址栏和工具栏
-      `--window-size=${config.width},${config.height}`,
-      '--disable-features=TranslateUI',
-      '--disable-extensions',
-      '--disable-component-extensions-with-background-pages',
-      '--disable-background-networking',
-      '--disable-sync',
-      '--metrics-recording-only',
-      '--disable-default-apps',
-      '--mute-audio',
-      '--no-first-run',
-      '--disable-backgrounding-occluded-windows',
-      '--disable-renderer-backgrounding',
-      '--disable-background-timer-throttling',
-      '--disable-ipc-flooding-protection',
-      '--password-store=basic',
-      '--use-mock-keychain',
-    ];
+  private launchBrowser(browserPath: string, args: string[]): void {
+    try {
+      // 启动分离进程
+      const child = spawn(browserPath, args, {
+        detached: true,      // 进程分离，允许父进程退出（需求 4.3）
+        stdio: 'ignore',     // 忽略标准输入输出，避免管道阻塞（需求 4.4）
+      });
+      
+      // 允许父进程退出而不等待子进程（需求 4.5）
+      child.unref();
+      
+      // 监听错误事件（虽然 stdio: 'ignore'，但 spawn 本身可能失败）
+      child.on('error', (err) => {
+        throw new BrowserLaunchError(`浏览器进程启动失败: ${err.message}`, err);
+      });
+    } catch (err) {
+      // 将原始错误包装为 BrowserLaunchError
+      if (err instanceof BrowserLaunchError) {
+        throw err;
+      }
+      throw new BrowserLaunchError(
+        `无法启动浏览器: ${(err as Error).message}`,
+        err as Error
+      );
+    }
   }
 
   /**
-   * 处理 Puppeteer 未安装错误
+   * 处理浏览器未找到的情况
+   * 
+   * 显示友好的错误消息，包含：
+   * - 支持的浏览器列表
+   * - GUI 访问 URL（需求 6.2）
+   * - 自定义浏览器路径设置说明
+   * - 浏览器安装指引链接（需求 6.3）
+   * 
+   * @param guiUrl GUI 访问 URL
+   * 
+   * **验证需求：6.1, 6.2, 6.3**
    */
-  private handlePuppeteerNotInstalled(guiUrl: string): void {
+  private handleBrowserNotFound(guiUrl: string): void {
     console.error(`
-[node-network-devtools] 错误：Puppeteer 未安装
+[node-network-devtools] 未检测到已安装的浏览器
 
-请安装 Puppeteer：
-  pnpm add puppeteer
-  # 或
-  npm install puppeteer
-  # 或
-  yarn add puppeteer
+支持的浏览器：
+  - Google Chrome
+  - Microsoft Edge
+  - Chromium
 
-或禁用自动打开浏览器：
-  NND_AUTO_OPEN=false node --import node-network-devtools/register app.js
+请安装其中一个浏览器，或手动访问 GUI：
+  ${guiUrl}
 
-GUI 仍可通过浏览器访问：${guiUrl}
+自定义浏览器路径：
+  export NND_BROWSER_PATH=/path/to/browser
+
+浏览器安装指引：
+  Chrome: https://www.google.com/chrome/
+  Edge: https://www.microsoft.com/edge
+  更多信息: https://github.com/dong0926/node-network-devtools#readme
     `);
   }
 
   /**
-   * 处理 Puppeteer 启动失败错误
+   * 处理浏览器启动失败的情况
+   * 
+   * 显示友好的错误消息，包含：
+   * - 错误信息（需求 6.4）
+   * - 可能的原因分析
+   * - 解决方案建议（需求 6.5）
+   * - 手动访问 URL 提示
+   * 
+   * @param err 错误对象
+   * @param guiUrl GUI 访问 URL
+   * 
+   * **验证需求：6.4, 6.5**
    */
-  private handlePuppeteerLaunchError(err: Error, guiUrl: string): void {
+  private handleLaunchError(err: Error, guiUrl: string): void {
     console.error(`
-[node-network-devtools] 错误：无法启动浏览器
+[node-network-devtools] 浏览器启动失败
 
 错误信息：${err.message}
 
 可能的原因：
-1. 缺少系统依赖（Chrome/Chromium）
-2. 权限不足
-3. 端口被占用
+  1. 浏览器路径无效
+  2. 权限不足
+  3. 系统资源不足
 
 解决方案：
-- 安装 Chrome/Chromium
-- 使用 NND_AUTO_OPEN=false 禁用自动打开
-- 手动访问 GUI: ${guiUrl}
-
-详细错误：
-${err.stack}
+  - 手动访问 GUI: ${guiUrl}
+  - 设置 NND_AUTO_OPEN=false 禁用自动打开
+  - 检查浏览器是否正确安装
+  - 尝试设置自定义浏览器路径: export NND_BROWSER_PATH=/path/to/browser
     `);
   }
 
   /**
-   * 检测是否在 Webpack 打包环境中
+   * 构建浏览器启动参数
+   * 
+   * @param options 启动选项
+   * @returns Chrome 命令行参数数组
    */
-  private isWebpackEnvironment(): boolean {
-    // 检测 webpack 特有的全局变量
-    if (typeof (globalThis as any).__webpack_require__ !== 'undefined') {
-      return true;
+  private buildLaunchArgs(options: BrowserLaunchOptions): string[] {
+    const { url, windowConfig, userDataDir } = options;
+    
+    const args = [
+      // App 模式（极简窗口，无地址栏和工具栏）
+      `--app=${url}`,
+      
+      // 窗口大小
+      `--window-size=${windowConfig.width},${windowConfig.height}`,
+    ];
+    
+    // 用户数据目录（如果提供）
+    if (userDataDir) {
+      args.push(`--user-data-dir=${userDataDir}`);
     }
     
-    // 检测 Next.js 的 webpack-internal 路径
-    if (typeof Error.captureStackTrace === 'function') {
-      const stack = new Error().stack || '';
-      if (stack.includes('webpack-internal://') || stack.includes('.next/server/')) {
-        return true;
-      }
-    }
+    // 优化参数
+    args.push(
+      '--no-first-run',                    // 跳过首次运行向导
+      '--no-default-browser-check',        // 跳过默认浏览器检查
+      '--disable-extensions',              // 禁用扩展
+      '--disable-sync',                    // 禁用同步
+      '--disable-background-networking',   // 禁用后台网络请求
+      '--disable-features=TranslateUI',    // 禁用翻译 UI
+      '--disable-component-extensions-with-background-pages',
+      '--disable-default-apps',            // 禁用默认应用
+      '--mute-audio',                      // 静音
+      
+      // 性能优化
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-timer-throttling',
+      
+      // 安全相关（某些环境需要）
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+    );
     
-    // 检测 process.env 中的 Next.js 标识
-    if (process.env.NEXT_RUNTIME === 'nodejs' || process.env.__NEXT_PROCESSED_ENV) {
-      return true;
-    }
-    
-    return false;
-  }
-
-  /**
-   * 使用 Puppeteer 打开极简窗口
-   */
-  private async openWithPuppeteer(url: string): Promise<void> {
-    // 检测 Webpack 环境，自动降级
-    if (this.isWebpackEnvironment()) {
-      console.warn(`
-[node-network-devtools] 检测到 Webpack 打包环境（Next.js/其他）
-
-由于 Webpack 打包限制，无法自动打开浏览器。
-GUI 服务器已启动，请手动访问：${url}
-
-提示：你可以在配置中设置 autoOpen: false 来禁用此警告。
-      `);
-      // 不抛出错误，静默失败
-      return;
-    }
-
-    try {
-      // 尝试动态导入 Puppeteer
-      let puppeteer: any;
-      try {
-        puppeteer = await import('puppeteer');
-      } catch (importErr) {
-        // 如果是模块未找到错误，提示用户
-        if ((importErr as any).code === 'MODULE_NOT_FOUND' || (importErr as any).code === 'ERR_MODULE_NOT_FOUND') {
-          this.handlePuppeteerNotInstalled(url);
-          throw new PuppeteerNotInstalledError('Puppeteer 未安装。请运行: pnpm add puppeteer');
-        }
-        // 其他导入错误也视为未安装
-        this.handlePuppeteerNotInstalled(url);
-        throw new PuppeteerNotInstalledError(`Puppeteer 导入失败: ${(importErr as Error).message}`);
-      }
-
-      // 获取窗口配置
-      const config = getConfig();
-      const windowConfig: BrowserWindowConfig = {
-        width: config.browserWindowSize?.width ?? 800,
-        height: config.browserWindowSize?.height ?? 600,
-        title: config.browserWindowTitle ?? 'Node Network DevTools',
-      };
-
-      // 构建启动参数
-      const args = this.buildLaunchArgs(url, windowConfig);
-
-      // 启动浏览器
-      this.puppeteerBrowser = await puppeteer.default.launch({
-        headless: false,
-        defaultViewport: null,
-        args,
-      });
-
-      // 获取第一个页面（app 模式会自动创建）
-      const browser = this.puppeteerBrowser as { pages: () => Promise<unknown[]> };
-      const pages = await browser.pages();
-      this.puppeteerPage = pages[0];
-
-      // 设置页面标题
-      const page = this.puppeteerPage as { evaluate: (fn: string, title: string) => Promise<void> };
-      await page.evaluate(`(title) => { document.title = title; }`, windowConfig.title);
-
-      console.log(`[node-network-devtools] 已启动 Puppeteer 窗口: ${url}`);
-    } catch (err) {
-      if (err instanceof PuppeteerNotInstalledError) {
-        throw err;
-      }
-      this.handlePuppeteerLaunchError(err as Error, url);
-      throw new PuppeteerLaunchError('无法启动 Puppeteer 浏览器', err as Error);
-    }
+    return args;
   }
 
   /**
    * 关闭浏览器
    */
   async close(): Promise<void> {
-    if (this.puppeteerBrowser) {
-      try {
-        const browser = this.puppeteerBrowser as { close: () => Promise<void> };
-        await browser.close();
-      } catch {
-        // 忽略关闭错误
-      }
-      this.puppeteerBrowser = null;
-      this.puppeteerPage = null;
-    }
+    // TODO: 实现浏览器关闭逻辑（注：由于进程分离，实际无法关闭）
     this.isOpened = false;
   }
 
@@ -307,28 +366,67 @@ export async function closeBrowser(): Promise<void> {
 }
 
 /**
- * 导出 buildLaunchArgs 用于测试
+ * 构建浏览器启动参数（导出用于测试）
+ * 
+ * @param options 启动选项
+ * @returns Chrome 命令行参数数组
  */
-export function buildLaunchArgs(url: string, config: BrowserWindowConfig): string[] {
-  return [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
+export function buildLaunchArgs(options: BrowserLaunchOptions): string[] {
+  const { url, windowConfig, userDataDir } = options;
+  
+  const args = [
+    // App 模式（极简窗口，无地址栏和工具栏）
     `--app=${url}`,
-    `--window-size=${config.width},${config.height}`,
-    '--disable-features=TranslateUI',
-    '--disable-extensions',
+    
+    // 窗口大小
+    `--window-size=${windowConfig.width},${windowConfig.height}`,
+  ];
+  
+  // 用户数据目录（如果提供）
+  if (userDataDir) {
+    args.push(`--user-data-dir=${userDataDir}`);
+  }
+  
+  // 优化参数
+  args.push(
+    '--no-first-run',                    // 跳过首次运行向导
+    '--no-default-browser-check',        // 跳过默认浏览器检查
+    '--disable-extensions',              // 禁用扩展
+    '--disable-sync',                    // 禁用同步
+    '--disable-background-networking',   // 禁用后台网络请求
+    '--disable-features=TranslateUI',    // 禁用翻译 UI
     '--disable-component-extensions-with-background-pages',
-    '--disable-background-networking',
-    '--disable-sync',
-    '--metrics-recording-only',
-    '--disable-default-apps',
-    '--mute-audio',
-    '--no-first-run',
+    '--disable-default-apps',            // 禁用默认应用
+    '--mute-audio',                      // 静音
+    
+    // 性能优化
     '--disable-backgrounding-occluded-windows',
     '--disable-renderer-backgrounding',
     '--disable-background-timer-throttling',
-    '--disable-ipc-flooding-protection',
-    '--password-store=basic',
-    '--use-mock-keychain',
-  ];
+    
+    // 安全相关（某些环境需要）
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+  );
+  
+  return args;
+}
+
+/**
+ * 创建用户数据目录路径
+ * 
+ * 生成一个唯一的临时目录路径用于浏览器用户数据。
+ * 使用 nanoid 生成 8 位随机 ID 确保每次启动都使用独立的会话。
+ * 
+ * @returns 用户数据目录的完整路径，格式：`{tmpdir}/nnd-browser-{sessionId}`
+ * 
+ * @example
+ * ```typescript
+ * const userDataDir = createUserDataDir();
+ * // 返回类似：/tmp/nnd-browser-a1b2c3d4
+ * ```
+ */
+export function createUserDataDir(): string {
+  const sessionId = nanoid(8);
+  return join(tmpdir(), `nnd-browser-${sessionId}`);
 }
