@@ -6,17 +6,35 @@
 
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { join, extname } from 'node:path';
+import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
 import { getConfig } from '../config.js';
 import { getAvailablePort } from './port-utils.js';
 import { getWebSocketHub, type IWebSocketHub } from './websocket-hub.js';
 import { getEventBridge, type IEventBridge } from './event-bridge.js';
 
 // 获取当前模块目录
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// 在 CommonJS 中，__dirname 是全局可用的
+// 在 ESM 中，需要使用 import.meta.url
+// 为了避免在 CJS 构建中出现 import.meta 引用，我们使用 eval 来延迟求值
+let currentDirname: string;
+
+// @ts-ignore - __dirname 在 CommonJS 中可用
+if (typeof __dirname !== 'undefined') {
+  // CommonJS 环境
+  // @ts-ignore
+  currentDirname = __dirname;
+} else {
+  // ESM 环境 - 使用 eval 来避免 TypeScript 编译器处理 import.meta
+  try {
+    // eslint-disable-next-line no-eval
+    const importMetaUrl = eval('import.meta.url');
+    currentDirname = dirname(fileURLToPath(importMetaUrl));
+  } catch {
+    // 后备方案
+    currentDirname = process.cwd();
+  }
+}
 
 /**
  * GUI 服务器配置
@@ -87,8 +105,8 @@ class GUIServerImpl implements IGUIServer {
     this.eventBridge = eventBridge ?? getEventBridge();
     this.host = host;
     // 静态文件目录：dist/gui（构建后的前端文件）
-    // __dirname 在 ESM 中指向 dist/esm/gui，所以需要 ../../gui
-    this.staticDir = join(__dirname, '../../gui');
+    // currentDirname 在 ESM 中指向 dist/esm/gui，所以需要 ../../gui
+    this.staticDir = join(currentDirname, '../../gui');
   }
 
   /**

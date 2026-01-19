@@ -3,16 +3,29 @@
   "version": "0.2.0",
   "description": "🔍 Node.js network request monitoring tool with Chrome DevTools integration and built-in Web GUI",
   "type": "module",
-  "main": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/types/index.d.ts"
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     },
     "./register": {
-      "import": "./dist/esm/register.js"
+      "import": {
+        "types": "./dist/types/register.d.ts",
+        "default": "./dist/esm/register.js"
+      },
+      "require": {
+        "types": "./dist/types/register.d.ts",
+        "default": "./dist/cjs/register.js"
+      }
     }
   },
   "bin": {
@@ -23,12 +36,13 @@
     "dist",
     "templates",
     "README.md",
-    "LICENSE",
-    "BUILD.md"
+    "LICENSE"
   ],
   "scripts": {
-    "build": "pnpm build:esm && pnpm build:types && pnpm build:gui",
+    "build": "pnpm build:esm && pnpm build:cjs && pnpm build:types && pnpm build:gui && pnpm build:cjs-package",
     "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs-package": "node scripts/create-cjs-package.js",
     "build:types": "tsc -p tsconfig.types.json",
     "build:gui": "cd packages/gui && pnpm build",
     "test": "vitest run",

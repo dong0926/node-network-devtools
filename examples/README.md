@@ -54,6 +54,7 @@ Node.js 的 `inspector.Network` API 是实验性功能（Node.js 20.18.0+），�
 |------|------|
 | [basic-http](./basic-http) | 基础 HTTP 模块请求监听 |
 | [fetch-api](./fetch-api) | Node.js 原生 fetch API 监听 |
+| [commonjs-usage](./commonjs-usage) | CommonJS 模块系统使用示例 |
 | [request-tracing](./request-tracing) | 使用 TraceID 关联请求 |
 | [express-server](./express-server) | Web 服务器中监听外部 API 调用 |
 | [programmatic-api](./programmatic-api) | 编程式 API 使用 |

@@ -70,7 +70,9 @@ pnpm add node-network-devtools puppeteer
 yarn add node-network-devtools puppeteer
 ```
 
-**Note**: Puppeteer is required for the GUI browser window. If not installed, you'll see a friendly error message with installation instructions.
+**Note**: 
+- Puppeteer is required for the GUI browser window. If not installed, you'll see a friendly error message with installation instructions.
+- This package supports both **ESM** and **CommonJS** module systems. See [Module System Support](#module-system-support) for details.
 
 ### Usage
 
@@ -86,12 +88,19 @@ The CLI automatically injects the interceptor and opens the GUI.
 
 #### Method 2: Using `-r` flag
 
+**ESM:**
+```bash
+node --import node-network-devtools/register your-script.js
+```
+
+**CommonJS:**
 ```bash
 node -r node-network-devtools/register your-script.js
 ```
 
 #### Method 3: Programmatic
 
+**ESM:**
 ```typescript
 import { install } from 'node-network-devtools';
 
@@ -101,6 +110,20 @@ await install();
 import express from 'express';
 const app = express();
 // ...
+```
+
+**CommonJS:**
+```javascript
+const { install } = require('node-network-devtools');
+
+(async () => {
+  await install();
+
+  // Your application code
+  const express = require('express');
+  const app = express();
+  // ...
+})();
 ```
 
 ### Viewing Requests
@@ -257,6 +280,7 @@ Or configure in `package.json`:
 
 ### Express
 
+**ESM:**
 ```typescript
 import express from 'express';
 import { install } from 'node-network-devtools';
@@ -267,9 +291,79 @@ const app = express();
 // Your routes...
 ```
 
+**CommonJS:**
+```javascript
+const express = require('express');
+const { install } = require('node-network-devtools');
+
+(async () => {
+  await install();
+  
+  const app = express();
+  // Your routes...
+})();
+```
+
 ### Other Frameworks
 
 Works with any Node.js framework! Just install the interceptor before your application code.
+
+## 📦 Module System Support
+
+This package supports both **ESM (ECMAScript Modules)** and **CommonJS** module systems, making it compatible with all Node.js projects.
+
+### ESM (ECMAScript Modules)
+
+Use `import` statements in projects with `"type": "module"` in package.json or `.mjs` files:
+
+```typescript
+import { install, getRequestStore } from 'node-network-devtools';
+import 'node-network-devtools/register';
+
+await install();
+const store = getRequestStore();
+```
+
+### CommonJS
+
+Use `require()` statements in traditional Node.js projects or `.cjs` files:
+
+```javascript
+const { install, getRequestStore } = require('node-network-devtools');
+require('node-network-devtools/register');
+
+(async () => {
+  await install();
+  const store = getRequestStore();
+})();
+```
+
+### TypeScript
+
+Full TypeScript support with type definitions for both module systems:
+
+```typescript
+import type { Config, IRequestStore } from 'node-network-devtools';
+import { install, getRequestStore } from 'node-network-devtools';
+
+const config: Config = {
+  maxRequests: 500,
+  guiEnabled: true,
+};
+
+await install();
+const store: IRequestStore = getRequestStore();
+```
+
+### Module Resolution
+
+The package uses Node.js [Conditional Exports](https://nodejs.org/api/packages.html#conditional-exports) to automatically provide the correct module format:
+
+- **ESM projects**: Resolves to `dist/esm/index.js`
+- **CommonJS projects**: Resolves to `dist/cjs/index.js`
+- **TypeScript**: Uses `dist/types/index.d.ts` for both
+
+No configuration needed - it just works! 🎉
 
 ## 📚 API Reference
 
@@ -320,6 +414,7 @@ Check the [examples](./examples) directory for more usage examples:
 
 - [basic-http](./examples/basic-http) - Basic HTTP request monitoring
 - [fetch-api](./examples/fetch-api) - Fetch API monitoring
+- [commonjs-usage](./examples/commonjs-usage) - CommonJS module usage
 - [request-tracing](./examples/request-tracing) - Request tracing
 - [express-server](./examples/express-server) - Express server example
 - [programmatic-api](./examples/programmatic-api) - Programmatic API usage

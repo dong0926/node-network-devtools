@@ -5,15 +5,11 @@
  * 使用 Agent.compose() 方法添加拦截器
  */
 
-import { createRequire } from 'node:module';
 import { nanoid } from 'nanoid';
 import { getRequestStore, type RequestData, type ResponseData } from '../store/ring-buffer.js';
 import { getConfig } from '../config.js';
 import { getCurrentTraceId } from '../context/context-manager.js';
 import { getEventBridge } from '../gui/event-bridge.js';
-
-// 使用 createRequire 获取 undici 模块
-const require = createRequire(import.meta.url);
 
 // undici 类型定义
 interface UndiciDispatcher {
@@ -330,7 +326,16 @@ function createWrappedHandler(
  */
 function loadUndici(): UndiciModule | null {
   try {
-    return require('undici') as UndiciModule;
+    // 在 CommonJS 环境中，直接使用 require
+    // @ts-ignore - require 在 CommonJS 中可用
+    if (typeof require !== 'undefined') {
+      // @ts-ignore
+      return require('undici') as UndiciModule;
+    }
+    
+    // 在 ESM 环境中，undici 应该已经通过 import 可用
+    // 如果不可用，返回 null（用户可能没有安装 undici）
+    return null;
   } catch {
     // undici 可能未安装
     return null;

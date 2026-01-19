@@ -6,11 +6,29 @@
  */
 
 import { spawn } from 'node:child_process';
-import { resolve, dirname } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// 获取当前文件的 __filename 和 __dirname
+// 在 ESM 中使用 import.meta.url，在 CommonJS 中使用全局变量
+let currentFilename: string;
+let currentDirname: string;
+
+// 检测是否在 CommonJS 环境中
+// @ts-ignore - __filename 在 CommonJS 中可用
+if (typeof __filename !== 'undefined') {
+  // CommonJS 环境
+  // @ts-ignore
+  currentFilename = __filename;
+  // @ts-ignore
+  currentDirname = __dirname;
+} else {
+  // ESM 环境
+  // @ts-ignore - import.meta 在 ESM 中可用
+  currentFilename = fileURLToPath(import.meta.url);
+  currentDirname = dirname(currentFilename);
+}
 
 /**
  * 输出帮助信息
@@ -177,7 +195,7 @@ function main(): void {
 
   // 添加 register 入口
   // 计算 register.js 的路径（相对于 CLI 脚本）
-  const registerPath = resolve(__dirname, 'register.js');
+  const registerPath = resolve(currentDirname, 'register.js');
   nodeArgs.push('--import', registerPath);
 
   // 添加用户脚本和参数

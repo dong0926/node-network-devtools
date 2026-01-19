@@ -18,6 +18,116 @@
 
 **A:** Node.js >= 18.0.0。我们推荐使用 LTS 版本（18.x 或 20.x）。
 
+### Q: 支持 CommonJS 和 ESM 吗？
+
+**A:** 是的！从 v0.3.0 开始，包同时支持 **ESM（ECMAScript Modules）** 和 **CommonJS** 模块系统。
+
+**ESM 项目（`"type": "module"` 或 `.mjs` 文件）：**
+```typescript
+import { install, getRequestStore } from 'node-network-devtools';
+import 'node-network-devtools/register';
+
+await install();
+```
+
+**CommonJS 项目（传统 Node.js 或 `.cjs` 文件）：**
+```javascript
+const { install, getRequestStore } = require('node-network-devtools');
+require('node-network-devtools/register');
+
+(async () => {
+  await install();
+})();
+```
+
+**TypeScript 项目：**
+```typescript
+import type { Config, IRequestStore } from 'node-network-devtools';
+import { install } from 'node-network-devtools';
+
+await install();
+```
+
+包会自动根据你的项目配置提供正确的模块格式，无需任何额外配置！
+
+### Q: 如何在 CommonJS 项目中使用？
+
+**A:** 直接使用 `require()` 导入即可：
+
+```javascript
+const { install, setConfig, getRequestStore } = require('node-network-devtools');
+
+// 配置（可选）
+setConfig({
+  maxRequests: 500,
+  guiEnabled: true,
+});
+
+// 安装拦截器
+(async () => {
+  await install();
+  
+  // 你的应用代码
+  const http = require('http');
+  http.get('https://api.example.com/data', (res) => {
+    // 这个请求会被监控
+  });
+})();
+```
+
+**使用 `-r` 标志自动注册：**
+```bash
+node -r node-network-devtools/register your-script.js
+```
+
+### Q: 遇到 "require() of ES Module not supported" 错误怎么办？
+
+**A:** 这个错误在 v0.3.0+ 版本中不应该出现。如果遇到此错误：
+
+1. **确认版本**：
+   ```bash
+   npm list node-network-devtools
+   ```
+
+2. **升级到最新版本**：
+   ```bash
+   npm install node-network-devtools@latest
+   ```
+
+3. **清理缓存**：
+   ```bash
+   # npm
+   npm cache clean --force
+   
+   # pnpm
+   pnpm store prune
+   
+   # yarn
+   yarn cache clean
+   ```
+
+4. **重新安装**：
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+如果问题仍然存在，请查看 [故障排查文档](../troubleshooting/common-issues.md#模块系统问题) 或在 GitHub 上报告问题。
+
+### Q: 如何在 ESM 和 CommonJS 混合项目中使用？
+
+**A:** 包会自动处理！Node.js 的条件导出（Conditional Exports）会根据导入方式自动选择正确的模块格式：
+
+```javascript
+// 在 CommonJS 文件中
+const nnd = require('node-network-devtools'); // 自动使用 CJS 版本
+
+// 在 ESM 文件中
+import * as nnd from 'node-network-devtools'; // 自动使用 ESM 版本
+```
+
+无需任何配置，一切都是自动的！
+
 ### Q: 必须使用 pnpm 吗？
 
 **A:** 不是必须的。你可以使用 npm、yarn 或 pnpm。但项目开发使用 pnpm，所以我们推荐使用 pnpm。

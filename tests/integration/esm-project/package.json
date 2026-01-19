@@ -1,0 +1,10 @@
+{
+  "name": "esm-integration-test",
+  "version": "1.0.0",
+  "description": "ESM 集成测试项目",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node index.mjs"
+  }
+}

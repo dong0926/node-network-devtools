@@ -1,0 +1,13 @@
+{
+  "name": "commonjs-usage-example",
+  "version": "1.0.0",
+  "description": "CommonJS 模块系统使用示例",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "start:register": "node -r ../../dist/cjs/register.js index.js"
+  },
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}

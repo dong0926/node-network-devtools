@@ -5,6 +5,7 @@
 ## 📋 目录
 
 - [安装问题](#安装问题)
+- [模块系统问题](#模块系统问题)
 - [Puppeteer 问题](#puppeteer-问题)
 - [启动问题](#启动问题)
 - [请求监控问题](#请求监控问题)
@@ -39,6 +40,156 @@ npm ERR! syscall open
    pnpm install
    # 或
    yarn install
+   ```
+
+### 问题：require() of ES Module not supported
+
+**症状：**
+```
+Error [ERR_REQUIRE_ESM]: require() of ES Module node_modules/node-network-devtools/dist/esm/index.js not supported.
+Instead change the require of index.js to a dynamic import() which is available in all CommonJS modules.
+```
+
+**原因：**
+尝试在 CommonJS 项目中使用 `require()` 导入 ESM 模块。这个错误在 v0.3.0+ 版本中不应该出现。
+
+**解决方案：**
+
+1. **升级到最新版本**（推荐）：
+   ```bash
+   npm install node-network-devtools@latest
+   ```
+
+2. **清理缓存并重新安装**：
+   ```bash
+   # npm
+   npm cache clean --force
+   rm -rf node_modules package-lock.json
+   npm install
+   
+   # pnpm
+   pnpm store prune
+   rm -rf node_modules pnpm-lock.yaml
+   pnpm install
+   
+   # yarn
+   yarn cache clean
+   rm -rf node_modules yarn.lock
+   yarn install
+   ```
+
+3. **验证安装**：
+   ```bash
+   # 检查版本（应该是 0.3.0 或更高）
+   npm list node-network-devtools
+   
+   # 检查 package.json exports 字段
+   node -e "console.log(require('node-network-devtools/package.json').exports)"
+   ```
+
+4. **测试导入**：
+   ```javascript
+   // test-require.js
+   const nnd = require('node-network-devtools');
+   console.log('CommonJS import successful!');
+   console.log('install:', typeof nnd.install);
+   ```
+   
+   ```bash
+   node test-require.js
+   ```
+
+如果问题仍然存在，请查看 [FAQ - CommonJS 支持](../guides/faq.md#q-支持-commonjs-和-esm-吗) 或在 GitHub 上报告问题。
+
+### 问题：Cannot use import statement outside a module
+
+**症状：**
+```
+SyntaxError: Cannot use import statement outside a module
+```
+
+**原因：**
+在 CommonJS 项目中使用了 ESM 的 `import` 语法。
+
+**解决方案：**
+
+**方式 1：转换为 CommonJS 语法**（推荐）
+```javascript
+// 错误 ❌
+import { install } from 'node-network-devtools';
+
+// 正确 ✅
+const { install } = require('node-network-devtools');
+```
+
+**方式 2：转换项目为 ESM**
+在 `package.json` 中添加：
+```json
+{
+  "type": "module"
+}
+```
+
+然后可以使用 `import` 语法。
+
+**方式 3：使用 `.mjs` 扩展名**
+将文件重命名为 `.mjs`：
+```bash
+mv your-script.js your-script.mjs
+```
+
+### 问题：ERR_PACKAGE_PATH_NOT_EXPORTED
+
+**症状：**
+```
+Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './register' is not defined by "exports" in node_modules/node-network-devtools/package.json
+```
+
+**原因：**
+使用了旧版本的包，或 package.json 的 exports 字段配置错误。
+
+**解决方案：**
+
+1. **升级到 v0.3.0+**：
+   ```bash
+   npm install node-network-devtools@latest
+   ```
+
+2. **验证 exports 配置**：
+   ```bash
+   node -e "console.log(JSON.stringify(require('node-network-devtools/package.json').exports, null, 2))"
+   ```
+   
+   应该看到类似输出：
+   ```json
+   {
+     ".": {
+       "import": {
+         "types": "./dist/types/index.d.ts",
+         "default": "./dist/esm/index.js"
+       },
+       "require": {
+         "types": "./dist/types/index.d.ts",
+         "default": "./dist/cjs/index.js"
+       }
+     },
+     "./register": {
+       "import": {
+         "types": "./dist/types/register.d.ts",
+         "default": "./dist/esm/register.js"
+       },
+       "require": {
+         "types": "./dist/types/register.d.ts",
+         "default": "./dist/cjs/register.js"
+       }
+     }
+   }
+   ```
+
+3. **清理并重新安装**：
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
    ```
 
 ### 问题：TypeScript 类型定义缺失
@@ -77,6 +228,120 @@ ERROR: Failed to set up Chromium
    ```bash
    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium pnpm add puppeteer
    ```
+
+## 模块系统问题
+
+### 问题：如何在 CommonJS 项目中使用？
+
+**解决方案：**
+从 v0.3.0 开始，包完全支持 CommonJS。直接使用 `require()` 即可：
+
+```javascript
+const { install, setConfig, getRequestStore } = require('node-network-devtools');
+
+(async () => {
+  await install();
+  
+  // 你的应用代码
+  const http = require('http');
+  http.get('https://api.example.com/data', (res) => {
+    // 这个请求会被监控
+  });
+})();
+```
+
+**使用 `-r` 标志：**
+```bash
+node -r node-network-devtools/register your-script.js
+```
+
+### 问题：如何在 ESM 项目中使用？
+
+**解决方案：**
+使用 `import` 语法：
+
+```typescript
+import { install, setConfig, getRequestStore } from 'node-network-devtools';
+
+await install();
+
+// 你的应用代码
+import http from 'http';
+http.get('https://api.example.com/data', (res) => {
+  // 这个请求会被监控
+});
+```
+
+**使用 `--import` 标志：**
+```bash
+node --import node-network-devtools/register your-script.js
+```
+
+### 问题：混合使用 ESM 和 CommonJS
+
+**解决方案：**
+包会自动处理！Node.js 的条件导出会根据导入方式自动选择正确的模块格式：
+
+```javascript
+// 在 CommonJS 文件中（.cjs 或 package.json 中 "type": "commonjs"）
+const nnd = require('node-network-devtools'); // 自动使用 dist/cjs/index.js
+
+// 在 ESM 文件中（.mjs 或 package.json 中 "type": "module"）
+import * as nnd from 'node-network-devtools'; // 自动使用 dist/esm/index.js
+```
+
+无需任何配置，一切都是自动的！
+
+### 问题：TypeScript 项目中的类型定义
+
+**解决方案：**
+包提供完整的 TypeScript 类型定义，支持 ESM 和 CommonJS：
+
+```typescript
+import type { Config, IRequestStore } from 'node-network-devtools';
+import { install, getRequestStore } from 'node-network-devtools';
+
+const config: Config = {
+  maxRequests: 500,
+  guiEnabled: true,
+};
+
+await install();
+const store: IRequestStore = getRequestStore();
+```
+
+类型定义位于 `dist/types/` 目录，两种模块格式共享相同的类型定义。
+
+### 问题：在 TypeScript 中使用 CommonJS
+
+**解决方案：**
+在 `tsconfig.json` 中配置 CommonJS：
+
+```json
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true
+  }
+}
+```
+
+然后可以使用 `import` 语法（TypeScript 会编译为 `require()`）：
+
+```typescript
+import { install } from 'node-network-devtools';
+
+(async () => {
+  await install();
+})();
+```
+
+或直接使用 `require()`：
+
+```typescript
+const { install } = require('node-network-devtools');
+```
 
 ## Puppeteer 问题
 

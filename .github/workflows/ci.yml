@@ -101,6 +101,92 @@ jobs:
       - name: Check build artifacts
         run: |
           test -d dist/esm || exit 1
+          test -d dist/cjs || exit 1
           test -d dist/types || exit 1
           test -d dist/gui || exit 1
+          test -f dist/cjs/package.json || exit 1
           echo "✅ All build artifacts present"
+      
+      - name: Verify CJS package.json
+        run: |
+          content=$(cat dist/cjs/package.json)
+          if [[ "$content" != *'"type":"commonjs"'* ]]; then
+            echo "❌ CJS package.json missing or incorrect"
+            exit 1
+          fi
+          echo "✅ CJS package.json correct"
+      
+      - name: Test CommonJS require() import
+        run: |
+          node -e "const nnd = require('./dist/cjs/index.js'); console.log('✅ CommonJS require() works'); if (!nnd.getRequestStore) { console.error('❌ Missing exports'); process.exit(1); }"
+      
+      - name: Test CommonJS require() register
+        run: |
+          node -e "require('./dist/cjs/register.js'); console.log('✅ CommonJS register works');"
+      
+      - name: Test ESM import
+        run: |
+          node --input-type=module -e "import('./dist/esm/index.js').then(nnd => { console.log('✅ ESM import works'); if (!nnd.getRequestStore) { console.error('❌ Missing exports'); process.exit(1); } });"
+      
+      - name: Test ESM import register
+        run: |
+          node --input-type=module -e "import('./dist/esm/register.js').then(() => { console.log('✅ ESM register works'); });"
+      
+      - name: Run Node.js integration tests (CommonJS)
+        run: node src/module-resolution-cjs.node-test.cjs
+      
+      - name: Run Node.js integration tests (ESM)
+        run: node src/module-resolution-esm.node-test.mjs
+      
+      - name: Verify build structure
+        run: node scripts/verify-build.js
+
+  module-resolution:
+    name: Module Resolution Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build project
+        run: pnpm build
+      
+      - name: Test CommonJS integration project
+        run: |
+          echo "Testing CommonJS project integration..."
+          cd tests/integration/cjs-project
+          npm install
+          node index.js
+          echo "✅ CommonJS integration test passed"
+      
+      - name: Test ESM integration project
+        run: |
+          echo "Testing ESM project integration..."
+          cd tests/integration/esm-project
+          npm install
+          node index.mjs
+          echo "✅ ESM integration test passed"
+      
+      - name: Test TypeScript integration project
+        run: |
+          echo "Testing TypeScript project integration..."
+          cd tests/integration/ts-project
+          pnpm install
+          pnpm build
+          node dist/index.js
+          echo "✅ TypeScript integration test passed"
