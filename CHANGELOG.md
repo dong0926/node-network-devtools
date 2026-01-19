@@ -13,129 +13,18 @@
 - 性能分析和瓶颈检测
 - 导出请求数据（HAR 格式）
 
-## [0.2.0] - 2026-01-18
+## [0.2.0] - 2026-01-19
 
-### 💥 破坏性变更
+### ⚠️ 重大变更
+- **移除 Puppeteer 依赖**：完全移除了 Puppeteer，改为使用原生浏览器启动器，显著减小了依赖体积 (dcd7dcc)
+- **架构升级**：移除了旧版 CDP 集成，采用更轻量级的方案 (29efe11)
 
-- **移除 CDP/Inspector 集成**
-  - 删除 `src/cdp/` 目录及所有相关代码
-  - 移除 `autoConnect` 配置项
-  - 移除 `inspectorPort` 配置项
-  - 移除 `NND_AUTO_CONNECT` 环境变量
-  - 移除 `NND_INSPECTOR_PORT` 环境变量
-  - 从 API 中移除所有 CDP 相关导出（`getCDPBridge`、`createCDPBridge`、`resetCDPBridge`、`isInspectorEnabled` 等）
-  - 不再需要 `--inspect` 标志
+### ✨ 新增
+- **浏览器自动检测**：支持自动识别系统安装的 Chrome 和 Edge 浏览器
+- **Next.js 集成优化**：增强了对 Next.js 应用的自动检测 (29efe11)
 
-- **强制使用 Puppeteer**
-  - 移除默认浏览器支持
-  - 移除 `usePuppeteer` 配置项（始终为 true）
-  - 移除 `NND_USE_PUPPETEER` 环境变量
-  - 移除 `open` 包依赖
-  - Puppeteer 现在是 `peerDependency`（标记为可选）
-
-### ✨ 新功能
-
-- **极简浏览器窗口**
-  - 使用 Puppeteer app 模式启动
-  - 无地址栏、工具栏、菜单栏
-  - 类似独立应用的沉浸式界面
-  - 默认窗口大小 800x600
-
-- **新增配置项**
-  - `browserWindowSize`: 自定义窗口大小（宽度和高度）
-  - `browserWindowTitle`: 自定义窗口标题
-  - `NND_BROWSER_WIDTH`: 窗口宽度环境变量
-  - `NND_BROWSER_HEIGHT`: 窗口高度环境变量
-  - `NND_BROWSER_TITLE`: 窗口标题环境变量
-
-- **改进的错误处理**
-  - Puppeteer 未安装时提供清晰的错误信息和安装指引
-  - Puppeteer 启动失败时提供详细的解决方案
-  - 优雅降级，允许应用继续运行
-  - GUI 服务器仍然可用（用户可手动访问）
-
-- **开发环境警告**
-  - 文档中明确标注"仅用于开发环境"
-  - 提供生产环境禁用方法（`NND_GUI_ENABLED=false`）
-  - 添加环境检测建议
-  - 在 README 和文档中突出警告
-
-### 📦 依赖变更
-
-- **新增 peerDependency**: `puppeteer@^23.0.0`（标记为可选）
-- **移除 dependency**: `open@^10.1.0`
-- **新增 devDependency**: `puppeteer@^23.0.0`（用于开发和测试）
-
-### 📝 文档更新
-
-- 更新 README（中英文），移除 Inspector 相关说明
-- 添加"⚠️ 开发环境专用工具"警告章节
-- 更新所有示例项目文档
-- 更新 FAQ，添加 Puppeteer 相关问题
-- 更新快速开始指南
-- 添加生产环境禁用说明
-
-### 🔧 示例项目更新
-
-- 所有 7 个示例项目添加 Puppeteer 依赖
-- 移除示例中的 `--inspect` 标志
-- 更新所有示例的 README
-- 移除 `programmatic-api` 示例中的 CDP 相关代码
-
-### 🎯 迁移指南
-
-如果您从 0.1.x 版本升级：
-
-1. **安装 Puppeteer**
-   ```bash
-   pnpm add puppeteer
-   ```
-
-2. **移除 --inspect 标志**
-   ```bash
-   # 旧方式
-   node --inspect --import node-network-devtools/register app.js
-   
-   # 新方式
-   node --import node-network-devtools/register app.js
-   ```
-
-3. **更新配置**
-   - 移除 `autoConnect` 配置
-   - 移除 `inspectorPort` 配置
-   - 移除 `usePuppeteer` 配置
-   - 可选：添加 `browserWindowSize` 配置
-
-4. **移除 CDP 相关代码**
-   ```javascript
-   // ❌ 移除
-   import { getCDPBridge, isInspectorEnabled } from 'node-network-devtools';
-   
-   // ✅ 使用
-   import { startGUI } from 'node-network-devtools';
-   ```
-
-5. **生产环境禁用**
-   ```javascript
-   if (process.env.NODE_ENV === 'production') {
-     setConfig({ guiEnabled: false });
-   }
-   ```
-
-### 🚀 性能和维护性改进
-
-- 代码库减少 500+ 行代码
-- 配置选项减少 4 个
-- 测试用例减少约 15%
-- 依赖数量减少 1 个
-- 架构更简单，维护成本更低
-
-### ⚠️ 重要提示
-
-- **本工具仅用于开发环境**，不推荐在生产环境使用
-- 在 CI/CD 环境中，建议使用 `NND_GUI_ENABLED=false` 完全禁用工具
-- Puppeteer 体积约 300MB，但可以复用项目中已有的安装
-
+### 📝 文档
+- **文档重构**：将文档及指南迁移至 `docs` 目录 (08e9128)
 
 ## [0.1.3] - 2026-01-17
 
@@ -225,5 +114,7 @@
 - **修复（Fixed）**：错误修复
 - **安全（Security）**：安全相关的修复
 
-[未发布]: https://github.com/dong0926/node-network-devtools/compare/v0.1.0...HEAD
+[未发布]: https://github.com/dong0926/node-network-devtools/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/dong0926/node-network-devtools/releases/tag/v0.2.0
+[0.1.3]: https://github.com/dong0926/node-network-devtools/releases/tag/v0.1.3
 [0.1.0]: https://github.com/dong0926/node-network-devtools/releases/tag/v0.1.0
