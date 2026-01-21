@@ -1,6 +1,6 @@
 {
   "name": "@mt0926/node-network-devtools",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "🔍 Node.js network request monitoring tool with built-in Web GUI",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -42,8 +42,8 @@
     "build:types": "tsc -p tsconfig.types.json",
     "build:gui": "cd packages/gui && pnpm install && pnpm build",
     "test": "vitest run",
-    "test:http": "node --import tsx --test --test-concurrency=1 src/interceptors/http-patcher.node-test.mjs",
-    "test:undici": "node --import tsx --test --test-concurrency=1 src/interceptors/undici-patcher.node-test.mjs",
+    "test:http": "tsx --test src/interceptors/http-patcher.node-test.mjs",
+    "test:undici": "tsx --test src/interceptors/undici-patcher.node-test.mjs",
     "test:all": "pnpm test && pnpm test:http && pnpm test:undici",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
