@@ -32,10 +32,10 @@
 
 ### Testing Strategy
 - **多层次测试**:
-  - **单元测试**: 使用 Vitest 测试工具类和基础组件。
-  - **性能/鲁棒性测试**: 使用 `fast-check` 进行基于属性的测试 (Property-based testing)，尤其是在构建一致性检查方面。
+  - **单元测试**: 使用 Vitest 测试核心逻辑、工具类和基础组件。
+  - **集成测试**: 在 `tests/integration/` 下通过真实的项目环境验证工具的导入和基本功能，确保产物在不同模块系统下的可用性。
   - **节点测试**: 使用 `.node-test.mjs` 调用 Node.js 自带的测试运行器，验证拦截器在原生环境下的表现。
-- **构建验证**: 专门的 `scripts/verify-build.js` 确保打包后的文件结构和导出完整。
+
 
 ### Git Workflow
 - **Conventional Commits**: 虽然没有硬性强制，但倾向于清晰的提交记录。

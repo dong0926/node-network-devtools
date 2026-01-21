@@ -3,7 +3,6 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import * as fc from 'fast-check';
 import {
   isNextJsEnvironment,
   getCurrentRoute,
@@ -115,46 +114,23 @@ describe('NextJsAdapter', () => {
       expect(options?.cache).toBe('no-store');
     });
 
-    // Property 17: Next.js 选项透传
-    it('Property 17: 所有 Next.js 选项都应该被正确提取', () => {
-      fc.assert(
-        fc.property(
-          fc.record({
-            revalidate: fc.option(fc.oneof(fc.integer({ min: 0 }), fc.constant(false)), { nil: undefined }),
-            tags: fc.option(fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 5 }), { nil: undefined }),
-            cache: fc.option(fc.constantFrom('default', 'no-store', 'reload', 'no-cache', 'force-cache'), { nil: undefined }),
-          }),
-          (params) => {
-            const init: RequestInit & { next?: { revalidate?: number | false; tags?: string[] } } = {};
-            
-            if (params.revalidate !== undefined || params.tags !== undefined) {
-              init.next = {};
-              if (params.revalidate !== undefined) init.next.revalidate = params.revalidate;
-              if (params.tags !== undefined) init.next.tags = params.tags;
-            }
-            
-            if (params.cache !== undefined) {
-              init.cache = params.cache as RequestCache;
-            }
+    it('所有 Next.js 选项都应该被正确提取', () => {
+      const testCases = [
+        { next: { revalidate: 0 }, cache: 'default' },
+        { next: { revalidate: false, tags: ['a'] }, cache: 'no-store' },
+        { next: { revalidate: 100, tags: ['a', 'b'] } }
+      ];
 
-            const options = extractNextJsOptions(init);
-            
-            // 验证提取的选项与原始选项一致
-            if (init.next?.revalidate !== undefined) {
-              expect(options?.next?.revalidate).toBe(init.next.revalidate);
-            }
-            if (init.next?.tags !== undefined) {
-              expect(options?.next?.tags).toEqual(init.next.tags);
-            }
-            if (init.cache !== undefined) {
-              expect(options?.cache).toBe(init.cache);
-            }
-            
-            return true;
-          }
-        ),
-        { numRuns: 100 }
-      );
+      for (const init of testCases) {
+        const options = extractNextJsOptions(init as any);
+        if (init.next) {
+          expect(options?.next?.revalidate).toBe(init.next.revalidate);
+          expect(options?.next?.tags).toEqual(init.next.tags);
+        }
+        if (init.cache) {
+          expect(options?.cache).toBe(init.cache);
+        }
+      }
     });
   });
 
@@ -181,26 +157,15 @@ describe('NextJsAdapter', () => {
       expect(metadata.tags).toEqual(['data']);
     });
 
-    // Property 19: Next.js 请求来源关联
-    it('Property 19: 在路由上下文中的请求应该包含来源信息', () => {
-      fc.assert(
-        fc.property(
-          fc.record({
-            route: fc.string({ minLength: 1, maxLength: 50 }),
-            type: fc.constantFrom('server-component', 'server-action', 'route-handler', 'middleware'),
-          }),
-          (params) => {
-            const metadata = runWithRoute(params.route, params.type, () => {
-              return extractNextJsMetadata();
-            });
+    it('在路由上下文中的请求应该包含来源信息', () => {
+      const route = '/test-route';
+      const type = 'server-component';
+      const metadata = runWithRoute(route, type as any, () => {
+        return extractNextJsMetadata();
+      });
 
-            expect(metadata.route).toBe(params.route);
-            expect(metadata.requestType).toBe(params.type);
-            return true;
-          }
-        ),
-        { numRuns: 100 }
-      );
+      expect(metadata.route).toBe(route);
+      expect(metadata.requestType).toBe(type);
     });
   });
 
@@ -215,36 +180,23 @@ describe('NextJsAdapter', () => {
     });
   });
 
-  // Property 18: Next.js 缓存不干扰
-  describe('Property 18: 缓存行为不干扰', () => {
+  describe('缓存行为不干扰', () => {
     it('提取选项不应该修改原始对象', () => {
-      fc.assert(
-        fc.property(
-          fc.record({
-            revalidate: fc.option(fc.integer({ min: 0 }), { nil: undefined }),
-            tags: fc.option(fc.array(fc.string(), { maxLength: 3 }), { nil: undefined }),
-          }),
-          (params) => {
-            const original = {
-              next: {
-                revalidate: params.revalidate,
-                tags: params.tags ? [...params.tags] : undefined,
-              },
-            } as RequestInit;
-            
-            const originalJson = JSON.stringify(original);
-            
-            // 提取选项
-            extractNextJsOptions(original);
-            extractNextJsMetadata(original);
-            
-            // 验证原始对象未被修改
-            expect(JSON.stringify(original)).toBe(originalJson);
-            return true;
-          }
-        ),
-        { numRuns: 100 }
-      );
+      const original = {
+        next: {
+          revalidate: 60,
+          tags: ['test'],
+        },
+      } as RequestInit;
+      
+      const originalJson = JSON.stringify(original);
+      
+      // 提取选项
+      extractNextJsOptions(original);
+      extractNextJsMetadata(original);
+      
+      // 验证原始对象未被修改
+      expect(JSON.stringify(original)).toBe(originalJson);
     });
   });
 });

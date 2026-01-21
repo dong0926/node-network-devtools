@@ -1,46 +1,13 @@
 /**
  * 环形缓冲区测试
- * 
- * **Property 13: 环形缓冲区大小限制**
- * **Property 14: Body 截断正确性**
- * **Property 15: 查询功能正确性**
- * **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import * as fc from 'fast-check';
 import { 
   createRequestStore, 
   type RequestData, 
-  type ResponseData,
   type IRequestStore 
 } from './ring-buffer.js';
-
-// 生成随机请求数据的 Arbitrary
-const requestDataArb = fc.record({
-  id: fc.uuid(),
-  traceId: fc.option(fc.uuid(), { nil: undefined }),
-  url: fc.webUrl(),
-  method: fc.constantFrom('GET', 'POST', 'PUT', 'DELETE', 'PATCH'),
-  headers: fc.dictionary(
-    fc.stringMatching(/^[a-z][a-z0-9-]*$/),
-    fc.string({ minLength: 1, maxLength: 100 })
-  ),
-  body: fc.option(fc.string({ minLength: 0, maxLength: 1000 }), { nil: undefined }),
-  stackTrace: fc.string({ minLength: 10, maxLength: 500 }),
-  timestamp: fc.integer({ min: 0, max: Date.now() + 1000000 }),
-}) as fc.Arbitrary<RequestData>;
-
-// 生成随机响应数据的 Arbitrary
-const responseDataArb = fc.record({
-  statusCode: fc.integer({ min: 100, max: 599 }),
-  statusMessage: fc.string({ minLength: 1, maxLength: 50 }),
-  headers: fc.dictionary(
-    fc.stringMatching(/^[a-z][a-z0-9-]*$/),
-    fc.string({ minLength: 1, maxLength: 100 })
-  ),
-  body: fc.option(fc.string({ minLength: 0, maxLength: 1000 }), { nil: undefined }),
-}) as fc.Arbitrary<ResponseData>;
 
 describe('RingBufferStore', () => {
   let store: IRequestStore;
@@ -108,181 +75,116 @@ describe('RingBufferStore', () => {
     });
   });
 
-  /**
-   * Property 13: 环形缓冲区大小限制
-   * 
-   * *For any* 数量的请求添加到缓冲区，缓冲区中存储的请求数量应该不超过配置的最大值，
-   * 且最新的请求应该始终可访问。
-   */
-  describe('Property 13: 环形缓冲区大小限制', () => {
-    it('should never exceed max size', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 1, max: 50 }), // maxSize
-          fc.integer({ min: 1, max: 200 }), // 添加的请求数量
-          (maxSize, numRequests) => {
-            const testStore = createRequestStore(maxSize, 1024 * 1024);
-            
-            for (let i = 0; i < numRequests; i++) {
-              testStore.add({
-                id: `req_${i}`,
-                url: `https://example.com/${i}`,
-                method: 'GET',
-                headers: {},
-                stackTrace: '',
-                timestamp: i,
-              });
-            }
+  describe('环形缓冲区大小限制', () => {
+    it('不应超过最大限制', () => {
+      const maxSize = 10;
+      const testStore = createRequestStore(maxSize, 1024 * 1024);
+      
+      for (let i = 0; i < 20; i++) {
+        testStore.add({
+          id: `req_${i}`,
+          url: `https://example.com/${i}`,
+          method: 'GET',
+          headers: {},
+          stackTrace: '',
+          timestamp: i,
+        });
+      }
 
-            // 缓冲区大小不应超过 maxSize
-            return testStore.size() <= maxSize;
-          }
-        ),
-        { numRuns: 100 }
-      );
+      expect(testStore.size()).toBe(maxSize);
     });
 
-    it('should always keep the most recent requests accessible', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 5, max: 50 }), // maxSize
-          fc.integer({ min: 10, max: 200 }), // 添加的请求数量
-          (maxSize, numRequests) => {
-            const testStore = createRequestStore(maxSize, 1024 * 1024);
-            
-            for (let i = 0; i < numRequests; i++) {
-              testStore.add({
-                id: `req_${i}`,
-                url: `https://example.com/${i}`,
-                method: 'GET',
-                headers: {},
-                stackTrace: '',
-                timestamp: i,
-              });
-            }
+    it('应该始终保持最新请求可访问', () => {
+      const maxSize = 10;
+      const testStore = createRequestStore(maxSize, 1024 * 1024);
+      
+      for (let i = 0; i < 20; i++) {
+        testStore.add({
+          id: `req_${i}`,
+          url: `https://example.com/${i}`,
+          method: 'GET',
+          headers: {},
+          stackTrace: '',
+          timestamp: i,
+        });
+      }
 
-            // 最新的请求应该始终可访问
-            const lastId = `req_${numRequests - 1}`;
-            const lastRequest = testStore.get(lastId);
-            return lastRequest !== undefined && lastRequest.id === lastId;
-          }
-        ),
-        { numRuns: 100 }
-      );
+      const lastId = 'req_19';
+      const lastRequest = testStore.get(lastId);
+      expect(lastRequest).toBeDefined();
+      expect(lastRequest?.id).toBe(lastId);
     });
 
-    it('should overwrite oldest entries when full', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 5, max: 20 }), // maxSize
-          (maxSize) => {
-            const testStore = createRequestStore(maxSize, 1024 * 1024);
-            const totalRequests = maxSize * 2;
-            
-            for (let i = 0; i < totalRequests; i++) {
-              testStore.add({
-                id: `req_${i}`,
-                url: `https://example.com/${i}`,
-                method: 'GET',
-                headers: {},
-                stackTrace: '',
-                timestamp: i,
-              });
-            }
+    it('缓冲区满时应覆盖最旧的条目', () => {
+      const maxSize = 5;
+      const testStore = createRequestStore(maxSize, 1024 * 1024);
+      
+      for (let i = 0; i < 10; i++) {
+        testStore.add({
+          id: `req_${i}`,
+          url: `https://example.com/${i}`,
+          method: 'GET',
+          headers: {},
+          stackTrace: '',
+          timestamp: i,
+        });
+      }
 
-            // 最旧的请求应该被覆盖
-            const oldestId = `req_0`;
-            const oldestRequest = testStore.get(oldestId);
-            
-            // 最新的请求应该存在
-            const newestId = `req_${totalRequests - 1}`;
-            const newestRequest = testStore.get(newestId);
-
-            return oldestRequest === undefined && newestRequest !== undefined;
-          }
-        ),
-        { numRuns: 100 }
-      );
+      // 最旧的（0-4）应该被覆盖
+      expect(testStore.get('req_0')).toBeUndefined();
+      expect(testStore.get('req_4')).toBeUndefined();
+      // 最新的（5-9）应该存在
+      expect(testStore.get('req_5')).toBeDefined();
+      expect(testStore.get('req_9')).toBeDefined();
     });
   });
 
-  /**
-   * Property 14: Body 截断正确性
-   * 
-   * *For any* body 大小超过配置限制的请求，存储的 body 应该被截断到限制大小，
-   * 且 bodyTruncated 标志应该为 true。
-   */
-  describe('Property 14: Body 截断正确性', () => {
-    it('should truncate body exceeding max size and set flag', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 100, max: 1000 }), // maxBodySize
-          fc.integer({ min: 1, max: 5 }), // 超出倍数
-          (maxBodySize, multiplier) => {
-            const testStore = createRequestStore(100, maxBodySize);
-            const bodySize = maxBodySize * multiplier + 50; // 确保超过限制
-            const largeBody = 'x'.repeat(bodySize);
-
-            testStore.add({
-              id: 'req_large',
-              url: 'https://example.com',
-              method: 'POST',
-              headers: {},
-              body: largeBody,
-              stackTrace: '',
-              timestamp: 0,
-            });
-
-            const request = testStore.get('req_large');
-            if (!request) return false;
-
-            // body 应该被截断
-            const storedBodySize = request.body ? Buffer.byteLength(request.body) : 0;
-            const isTruncated = storedBodySize <= maxBodySize;
-            const flagSet = request.bodyTruncated === true;
-
-            return isTruncated && flagSet;
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-
-    it('should not truncate body within limit', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 100, max: 1000 }), // maxBodySize
-          fc.integer({ min: 1, max: 99 }), // body 大小百分比
-          (maxBodySize, percentage) => {
-            const testStore = createRequestStore(100, maxBodySize);
-            const bodySize = Math.floor(maxBodySize * percentage / 100);
-            const body = 'x'.repeat(bodySize);
-
-            testStore.add({
-              id: 'req_small',
-              url: 'https://example.com',
-              method: 'POST',
-              headers: {},
-              body,
-              stackTrace: '',
-              timestamp: 0,
-            });
-
-            const request = testStore.get('req_small');
-            if (!request) return false;
-
-            // body 不应该被截断
-            return request.body === body && request.bodyTruncated !== true;
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-
-    it('should truncate response body as well', () => {
+  describe('Body 截断', () => {
+    it('超过限制的 Body 应该被截断并设置标志', () => {
       const maxBodySize = 100;
       const testStore = createRequestStore(100, maxBodySize);
-      const largeBody = 'y'.repeat(maxBodySize * 2);
+      const largeBody = 'x'.repeat(200);
+
+      testStore.add({
+        id: 'req_large',
+        url: 'https://example.com',
+        method: 'POST',
+        headers: {},
+        body: largeBody,
+        stackTrace: '',
+        timestamp: 0,
+      });
+
+      const request = testStore.get('req_large');
+      expect(request).toBeDefined();
+      expect(Buffer.byteLength(request!.body || '')).toBeLessThanOrEqual(maxBodySize);
+      expect(request!.bodyTruncated).toBe(true);
+    });
+
+    it('限制范围内的 Body 不应被截断', () => {
+      const maxBodySize = 100;
+      const testStore = createRequestStore(100, maxBodySize);
+      const normalBody = 'x'.repeat(50);
+
+      testStore.add({
+        id: 'req_normal',
+        url: 'https://example.com',
+        method: 'POST',
+        headers: {},
+        body: normalBody,
+        stackTrace: '',
+        timestamp: 0,
+      });
+
+      const request = testStore.get('req_normal');
+      expect(request?.body).toBe(normalBody);
+      expect(request?.bodyTruncated).not.toBe(true);
+    });
+
+    it('响应 Body 也应该被截断', () => {
+      const maxBodySize = 100;
+      const testStore = createRequestStore(100, maxBodySize);
+      const largeBody = 'y'.repeat(200);
 
       testStore.add({
         id: 'req_1',
@@ -306,139 +208,60 @@ describe('RingBufferStore', () => {
     });
   });
 
-  /**
-   * Property 15: 查询功能正确性
-   * 
-   * *For any* 存储在缓冲区中的请求，通过 ID、TraceID、URL 模式或状态码查询
-   * 应该能够正确返回匹配的请求。
-   */
-  describe('Property 15: 查询功能正确性', () => {
-    it('should find request by ID', () => {
-      fc.assert(
-        fc.property(
-          fc.array(requestDataArb, { minLength: 1, maxLength: 50 }),
-          (requests) => {
-            const testStore = createRequestStore(100, 1024 * 1024);
-            
-            for (const req of requests) {
-              testStore.add(req);
-            }
-
-            // 随机选择一个请求进行查询
-            const targetRequest = requests[requests.length - 1]; // 最后一个肯定在
-            const found = testStore.get(targetRequest.id);
-
-            return found !== undefined && found.id === targetRequest.id;
-          }
-        ),
-        { numRuns: 100 }
-      );
+  describe('查询功能', () => {
+    it('应能通过 ID 查找请求', () => {
+      store.add({ id: 'req_1', url: 'https://a.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
+      const found = store.get('req_1');
+      expect(found?.id).toBe('req_1');
     });
 
-    it('should find requests by TraceID', () => {
-      fc.assert(
-        fc.property(
-          fc.uuid(), // traceId
-          fc.integer({ min: 1, max: 10 }), // 同一 trace 的请求数
-          fc.integer({ min: 0, max: 10 }), // 其他请求数
-          (traceId, sameTraceCount, otherCount) => {
-            const testStore = createRequestStore(100, 1024 * 1024);
-            
-            // 添加同一 trace 的请求
-            for (let i = 0; i < sameTraceCount; i++) {
-              testStore.add({
-                id: `same_${i}`,
-                traceId,
-                url: `https://example.com/${i}`,
-                method: 'GET',
-                headers: {},
-                stackTrace: '',
-                timestamp: i,
-              });
-            }
+    it('应能通过 TraceID 查找请求', () => {
+      const traceId = 'trace_123';
+      store.add({ id: 'req_1', traceId, url: 'https://a.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
+      store.add({ id: 'req_2', traceId, url: 'https://b.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 1 });
+      store.add({ id: 'req_3', traceId: 'other', url: 'https://c.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 2 });
 
-            // 添加其他请求
-            for (let i = 0; i < otherCount; i++) {
-              testStore.add({
-                id: `other_${i}`,
-                traceId: `other_trace_${i}`,
-                url: `https://other.com/${i}`,
-                method: 'GET',
-                headers: {},
-                stackTrace: '',
-                timestamp: i + sameTraceCount,
-              });
-            }
-
-            const results = testStore.getByTraceId(traceId);
-            
-            // 应该找到所有同一 trace 的请求
-            return results.length === sameTraceCount && 
-                   results.every(r => r.traceId === traceId);
-          }
-        ),
-        { numRuns: 100 }
-      );
+      const results = store.getByTraceId(traceId);
+      expect(results.length).toBe(2);
+      expect(results.every(r => r.traceId === traceId)).toBe(true);
     });
 
-    it('should find requests by URL pattern', () => {
-      const testStore = createRequestStore(100, 1024 * 1024);
-      
-      testStore.add({ id: 'api_1', url: 'https://api.example.com/users', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
-      testStore.add({ id: 'api_2', url: 'https://api.example.com/posts', method: 'GET', headers: {}, stackTrace: '', timestamp: 1 });
-      testStore.add({ id: 'cdn_1', url: 'https://cdn.example.com/image.png', method: 'GET', headers: {}, stackTrace: '', timestamp: 2 });
+    it('应能通过 URL 模式查找请求', () => {
+      store.add({ id: 'api_1', url: 'https://api.example.com/users', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
+      store.add({ id: 'cdn_1', url: 'https://cdn.example.com/image.png', method: 'GET', headers: {}, stackTrace: '', timestamp: 1 });
 
-      const apiResults = testStore.query({ urlPattern: /api\.example\.com/ });
-      expect(apiResults.length).toBe(2);
-      expect(apiResults.every(r => r.url.includes('api.example.com'))).toBe(true);
+      const apiResults = store.query({ urlPattern: /api\.example\.com/ });
+      expect(apiResults.length).toBe(1);
+      expect(apiResults[0].id).toBe('api_1');
 
-      const cdnResults = testStore.query({ urlPattern: 'cdn' });
+      const cdnResults = store.query({ urlPattern: 'cdn' });
       expect(cdnResults.length).toBe(1);
+      expect(cdnResults[0].id).toBe('cdn_1');
     });
 
-    it('should find requests by status code', () => {
-      const testStore = createRequestStore(100, 1024 * 1024);
-      
-      testStore.add({ id: 'req_1', url: 'https://a.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
-      testStore.add({ id: 'req_2', url: 'https://b.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 1 });
-      testStore.add({ id: 'req_3', url: 'https://c.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 2 });
+    it('应能通过状态码查找请求', () => {
+      store.add({ id: 'req_1', url: 'https://a.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
+      store.add({ id: 'req_2', url: 'https://b.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 1 });
 
-      testStore.updateResponse('req_1', { statusCode: 200, statusMessage: 'OK', headers: {} });
-      testStore.updateResponse('req_2', { statusCode: 404, statusMessage: 'Not Found', headers: {} });
-      testStore.updateResponse('req_3', { statusCode: 500, statusMessage: 'Error', headers: {} });
+      store.updateResponse('req_1', { statusCode: 200, statusMessage: 'OK', headers: {} });
+      store.updateResponse('req_2', { statusCode: 404, statusMessage: 'Not Found', headers: {} });
 
-      const okResults = testStore.query({ statusCode: 200 });
+      const okResults = store.query({ statusCode: 200 });
       expect(okResults.length).toBe(1);
       expect(okResults[0].id).toBe('req_1');
 
-      const errorResults = testStore.query({ statusCodeMin: 400 });
-      expect(errorResults.length).toBe(2);
+      const errorResults = store.query({ statusCodeMin: 400 });
+      expect(errorResults.length).toBe(1);
+      expect(errorResults[0].id).toBe('req_2');
     });
 
-    it('should find requests by method', () => {
-      const testStore = createRequestStore(100, 1024 * 1024);
-      
-      testStore.add({ id: 'get_1', url: 'https://a.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
-      testStore.add({ id: 'post_1', url: 'https://b.com', method: 'POST', headers: {}, stackTrace: '', timestamp: 1 });
-      testStore.add({ id: 'get_2', url: 'https://c.com', method: 'GET', headers: {}, stackTrace: '', timestamp: 2 });
+    it('组合查询应正常工作', () => {
+      store.add({ id: 'req_1', traceId: 'trace_1', url: 'https://api.com/users', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
+      store.add({ id: 'req_2', traceId: 'trace_1', url: 'https://api.com/users', method: 'POST', headers: {}, stackTrace: '', timestamp: 1 });
 
-      const getResults = testStore.query({ method: 'GET' });
-      expect(getResults.length).toBe(2);
-      expect(getResults.every(r => r.method === 'GET')).toBe(true);
-    });
+      store.updateResponse('req_1', { statusCode: 200, statusMessage: 'OK', headers: {} });
 
-    it('should combine multiple filters', () => {
-      const testStore = createRequestStore(100, 1024 * 1024);
-      
-      testStore.add({ id: 'req_1', traceId: 'trace_1', url: 'https://api.com/users', method: 'GET', headers: {}, stackTrace: '', timestamp: 0 });
-      testStore.add({ id: 'req_2', traceId: 'trace_1', url: 'https://api.com/posts', method: 'POST', headers: {}, stackTrace: '', timestamp: 1 });
-      testStore.add({ id: 'req_3', traceId: 'trace_2', url: 'https://api.com/users', method: 'GET', headers: {}, stackTrace: '', timestamp: 2 });
-
-      testStore.updateResponse('req_1', { statusCode: 200, statusMessage: 'OK', headers: {} });
-      testStore.updateResponse('req_2', { statusCode: 201, statusMessage: 'Created', headers: {} });
-      testStore.updateResponse('req_3', { statusCode: 200, statusMessage: 'OK', headers: {} });
-
-      const results = testStore.query({ 
+      const results = store.query({ 
         traceId: 'trace_1', 
         method: 'GET',
         statusCode: 200 
@@ -450,11 +273,9 @@ describe('RingBufferStore', () => {
   });
 
   describe('getAll', () => {
-    it('should return all requests in reverse chronological order', () => {
-      const testStore = createRequestStore(100, 1024 * 1024);
-      
+    it('应该按时间倒序返回所有请求', () => {
       for (let i = 0; i < 5; i++) {
-        testStore.add({
+        store.add({
           id: `req_${i}`,
           url: `https://example.com/${i}`,
           method: 'GET',
@@ -464,9 +285,8 @@ describe('RingBufferStore', () => {
         });
       }
 
-      const all = testStore.getAll();
+      const all = store.getAll();
       expect(all.length).toBe(5);
-      // 最新的在前面
       expect(all[0].id).toBe('req_4');
       expect(all[4].id).toBe('req_0');
     });

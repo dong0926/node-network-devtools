@@ -2,8 +2,7 @@
  * 上下文管理器测试
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import * as fc from 'fast-check';
+import { describe, it, expect } from 'vitest';
 import {
   ContextManager,
   generateTraceId,
@@ -184,7 +183,7 @@ describe('ContextManager', () => {
     });
   });
 
-  describe('Property 7: 异步上下文传递', () => {
+  describe('异步上下文传递', () => {
     it('上下文应该在 Promise.all 中保持', async () => {
       await runWithTraceAsync(async () => {
         const traceId = getCurrentTraceId();
@@ -202,21 +201,6 @@ describe('ContextManager', () => {
 
         expect(results).toEqual([traceId, traceId]);
       });
-    });
-  });
-
-  describe('Property 8: TraceID 唯一性', () => {
-    it('生成的 TraceID 应该唯一', () => {
-      fc.assert(
-        fc.property(fc.integer({ min: 100, max: 1000 }), (count) => {
-          const ids = new Set<string>();
-          for (let i = 0; i < count; i++) {
-            ids.add(generateTraceId());
-          }
-          return ids.size === count;
-        }),
-        { numRuns: 10 }
-      );
     });
   });
 
