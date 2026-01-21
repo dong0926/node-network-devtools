@@ -4,7 +4,7 @@
  * 演示如何使用 node-network-devtools 监听 fetch API 的请求
  * 
  * 运行方式：
- *   npx node-network-devtools index.js
+ *   node --import ../../dist/esm/register.js index.js
  */
 
 console.log('Fetch API 示例');

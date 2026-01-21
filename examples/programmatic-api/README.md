@@ -6,8 +6,10 @@
 
 ### 使用 Web GUI（推荐）
 
+通过环境变量启用 GUI：
+
 ```bash
-npx node-network-devtools --gui index.js
+NND_GUI_ENABLED=true node index.js
 ```
 
 启动后会自动打开浏览器，显示网络请求面板。
@@ -22,7 +24,7 @@ pnpm start
 
 ### 使用 Web GUI（推荐）
 
-启动时添加 `--gui` 选项，会自动打开浏览器显示：
+启用 GUI 后，会自动打开浏览器显示：
 - 请求列表（状态、方法、URL、大小、耗时）
 - 请求详情（Headers、Payload、Response、Timing）
 - 过滤和搜索功能
@@ -30,7 +32,7 @@ pnpm start
 禁用自动打开浏览器：
 
 ```bash
-npx node-network-devtools --gui --no-open index.js
+NND_AUTO_OPEN=false NND_GUI_ENABLED=true node index.js
 ```
 
 ## 功能说明

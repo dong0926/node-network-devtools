@@ -77,13 +77,7 @@ try {
 ```bash
 # 在项目根目录
 cd examples
-node --inspect -r ../dist/esm/register.js test-realtime.js
-```
-
-或使用 CLI：
-
-```bash
-npx node-network-devtools --gui ../examples/test-realtime.js
+node --import ../dist/esm/register.js test-realtime.js
 ```
 
 这个脚本会每 3 秒发送一个请求，共发送 10 个请求。观察 GUI 是否实时显示这些请求。

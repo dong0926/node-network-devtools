@@ -25,7 +25,6 @@ const waitForRAF = async () => {
 
 describe('DetailPanel 集成测试', () => {
   let mockRequest: UIRequest;
-  let onClose: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     // Mock localStorage
@@ -98,8 +97,6 @@ describe('DetailPanel 集成测试', () => {
       },
     };
 
-    onClose = vi.fn();
-
     // 清空 localStorage
     localStorage.clear();
   });
@@ -111,7 +108,7 @@ describe('DetailPanel 集成测试', () => {
 
   describe('基本渲染', () => {
     it('应该渲染详情面板', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       // 验证面板头部显示请求信息
       expect(screen.getByText(/GET/)).toBeDefined();
@@ -119,7 +116,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该渲染所有标签页', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       expect(screen.getByText('Headers')).toBeDefined();
       expect(screen.getByText('Payload')).toBeDefined();
@@ -128,23 +125,16 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该渲染 Resizer 组件', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       expect(resizer).toBeDefined();
-    });
-
-    it('应该渲染关闭按钮', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
-
-      const closeButton = screen.getByTitle('关闭');
-      expect(closeButton).toBeDefined();
     });
   });
 
   describe('面板宽度调整功能（需求 1.1, 1.2）', () => {
     it('应该使用默认宽度（40%）', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const panel = screen.getByRole('separator').parentElement;
       expect(panel).toBeDefined();
@@ -155,7 +145,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该使用提供的初始宽度', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} initialWidth={600} />);
+      render(<DetailPanel request={mockRequest} initialWidth={600} />);
 
       const panel = screen.getByRole('separator').parentElement;
       const style = panel?.getAttribute('style');
@@ -163,7 +153,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该通过拖拽调整面板宽度', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -181,7 +171,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在拖拽过程中实时更新宽度', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -203,7 +193,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在鼠标释放后结束拖拽', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
 
@@ -222,7 +212,7 @@ describe('DetailPanel 集成测试', () => {
 
   describe('宽度边界约束（需求 1.5, 1.6）', () => {
     it('应该限制宽度不小于最小值（300px）', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -240,7 +230,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该限制宽度不大于最大值（窗口宽度的 80%）', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -258,7 +248,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该接受在边界内的宽度值', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -281,7 +271,7 @@ describe('DetailPanel 集成测试', () => {
       // 预先保存宽度到 localStorage
       localStorage.setItem('nnd-detail-panel-width', '900');
 
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const panel = screen.getByRole('separator').parentElement;
       const style = panel?.getAttribute('style');
@@ -294,7 +284,7 @@ describe('DetailPanel 集成测试', () => {
       // 确保 localStorage 中没有保存的值
       localStorage.removeItem('nnd-detail-panel-width');
 
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const panel = screen.getByRole('separator').parentElement;
       const style = panel?.getAttribute('style');
@@ -304,7 +294,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在调整宽度后更新面板宽度', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -328,14 +318,14 @@ describe('DetailPanel 集成测试', () => {
       // 预先保存一个宽度
       localStorage.setItem('nnd-detail-panel-width', '1000');
 
-      const { rerender } = render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      const { rerender } = render(<DetailPanel request={mockRequest} />);
 
       let panel = screen.getByRole('separator').parentElement;
       let style = panel?.getAttribute('style');
       expect(style).toContain('1000px');
 
       // 重新渲染组件
-      rerender(<DetailPanel request={mockRequest} onClose={onClose} />);
+      rerender(<DetailPanel request={mockRequest} />);
 
       panel = screen.getByRole('separator').parentElement;
       style = panel?.getAttribute('style');
@@ -350,7 +340,7 @@ describe('DetailPanel 集成测试', () => {
       // 先调整宽度
       localStorage.setItem('nnd-detail-panel-width', '1000');
 
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -370,7 +360,7 @@ describe('DetailPanel 集成测试', () => {
     it('应该在重置后 localStorage 中保存默认宽度', () => {
       localStorage.setItem('nnd-detail-panel-width', '1000');
 
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
 
@@ -385,14 +375,14 @@ describe('DetailPanel 集成测试', () => {
 
   describe('标签页切换功能', () => {
     it('应该默认显示 Headers 标签页', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const headersTab = screen.getByText('Headers');
       expect(headersTab.className).toContain('border-devtools-accent');
     });
 
     it('应该能够切换到 Payload 标签页', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const payloadTab = screen.getByText('Payload');
       fireEvent.click(payloadTab);
@@ -401,7 +391,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该能够切换到 Response 标签页', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const responseTab = screen.getByText('Response');
       fireEvent.click(responseTab);
@@ -410,7 +400,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该能够切换到 Timing 标签页', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const timingTab = screen.getByText('Timing');
       fireEvent.click(timingTab);
@@ -419,7 +409,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在切换标签页时保持面板宽度', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const panel = screen.getByRole('separator').parentElement;
       const resizer = screen.getByRole('separator');
@@ -442,35 +432,6 @@ describe('DetailPanel 集成测试', () => {
     });
   });
 
-  describe('关闭功能', () => {
-    it('应该在点击关闭按钮时调用 onClose', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
-
-      const closeButton = screen.getByTitle('关闭');
-      fireEvent.click(closeButton);
-
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
-    it('应该在调整宽度后能够正常关闭', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
-
-      const resizer = screen.getByRole('separator');
-
-      // 调整宽度
-      fireEvent.mouseDown(resizer, { clientX: 1152 });
-      fireEvent.mouseMove(document, { clientX: 1052 });
-      fireEvent.mouseUp(document);
-
-      // 关闭面板
-      const closeButton = screen.getByTitle('关闭');
-      fireEvent.click(closeButton);
-
-      // 验证关闭回调被调用
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe('错误信息显示', () => {
     it('应该在请求有错误时显示错误信息', () => {
       const requestWithError: UIRequest = {
@@ -481,7 +442,7 @@ describe('DetailPanel 集成测试', () => {
         },
       };
 
-      render(<DetailPanel request={requestWithError} onClose={onClose} />);
+      render(<DetailPanel request={requestWithError} />);
 
       expect(screen.getByText(/错误:/)).toBeDefined();
       expect(screen.getByText(/ECONNREFUSED/)).toBeDefined();
@@ -489,7 +450,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在没有错误时不显示错误信息', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       expect(screen.queryByText(/错误:/)).toBeNull();
     });
@@ -503,7 +464,7 @@ describe('DetailPanel 集成测试', () => {
         },
       };
 
-      render(<DetailPanel request={requestWithError} onClose={onClose} />);
+      render(<DetailPanel request={requestWithError} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -521,7 +482,7 @@ describe('DetailPanel 集成测试', () => {
 
   describe('响应式行为', () => {
     it('应该在窗口大小变化时调整最大宽度限制', async () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;
@@ -549,14 +510,14 @@ describe('DetailPanel 集成测试', () => {
 
   describe('与现有功能的兼容性', () => {
     it('应该正确显示请求方法和 URL', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       expect(screen.getByText(/GET/)).toBeDefined();
       expect(screen.getByText(/api\.example\.com/)).toBeDefined();
     });
 
     it('应该在 Payload 标签页中显示请求体', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const payloadTab = screen.getByText('Payload');
       fireEvent.click(payloadTab);
@@ -567,7 +528,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在 Response 标签页中显示响应体', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const responseTab = screen.getByText('Response');
       fireEvent.click(responseTab);
@@ -577,7 +538,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在 Headers 标签页中显示请求头和响应头', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       // Headers 标签页默认激活
       const headersTab = screen.getByText('Headers');
@@ -585,7 +546,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在 Timing 标签页中显示时序信息', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const timingTab = screen.getByText('Timing');
       fireEvent.click(timingTab);
@@ -602,7 +563,7 @@ describe('DetailPanel 集成测试', () => {
         requestBody: undefined,
       };
 
-      render(<DetailPanel request={requestWithoutBody} onClose={onClose} />);
+      render(<DetailPanel request={requestWithoutBody} />);
 
       const payloadTab = screen.getByText('Payload');
       fireEvent.click(payloadTab);
@@ -617,7 +578,7 @@ describe('DetailPanel 集成测试', () => {
         responseBody: undefined,
       };
 
-      render(<DetailPanel request={requestWithoutResponse} onClose={onClose} />);
+      render(<DetailPanel request={requestWithoutResponse} />);
 
       const responseTab = screen.getByText('Response');
       fireEvent.click(responseTab);
@@ -632,7 +593,7 @@ describe('DetailPanel 集成测试', () => {
         timing: undefined,
       };
 
-      render(<DetailPanel request={requestWithoutTiming} onClose={onClose} />);
+      render(<DetailPanel request={requestWithoutTiming} />);
 
       const timingTab = screen.getByText('Timing');
       fireEvent.click(timingTab);
@@ -647,7 +608,7 @@ describe('DetailPanel 集成测试', () => {
         url: 'https://api.example.com/' + 'a'.repeat(500),
       };
 
-      render(<DetailPanel request={requestWithLongUrl} onClose={onClose} />);
+      render(<DetailPanel request={requestWithLongUrl} />);
 
       // 应该正常渲染，URL 应该被截断
       const panel = screen.getByRole('separator').parentElement;
@@ -660,7 +621,7 @@ describe('DetailPanel 集成测试', () => {
         throw new Error('localStorage is not available');
       });
 
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
 
@@ -677,7 +638,7 @@ describe('DetailPanel 集成测试', () => {
 
   describe('性能和用户体验', () => {
     it('应该在拖拽时提供视觉反馈', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
 
@@ -690,7 +651,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在拖拽结束后清除视觉反馈', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
 
@@ -707,7 +668,7 @@ describe('DetailPanel 集成测试', () => {
     });
 
     it('应该在快速连续拖拽时正确工作', () => {
-      render(<DetailPanel request={mockRequest} onClose={onClose} />);
+      render(<DetailPanel request={mockRequest} />);
 
       const resizer = screen.getByRole('separator');
       const panel = resizer.parentElement;

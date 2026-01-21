@@ -5,7 +5,7 @@
  * 监听服务器发出的外部 API 请求
  * 
  * 运行方式：
- *   npx node-network-devtools index.js
+ *   node --import ../../dist/esm/register.js index.js
  */
 
 import http from 'node:http';

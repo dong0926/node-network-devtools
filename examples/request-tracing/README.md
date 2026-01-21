@@ -6,13 +6,21 @@
 
 ### 使用 Web GUI（推荐）
 
+使用 `register` 注入启动：
+
+**ESM:**
 ```bash
-npx node-network-devtools --gui index.js
+node --import node-network-devtools/register index.js
+```
+
+**CommonJS:**
+```bash
+node -r node-network-devtools/register index.js
 ```
 
 启动后会自动打开浏览器，显示网络请求面板。
 
-### 使用 CLI
+### 使用脚本启动
 
 ```bash
 pnpm start
@@ -22,7 +30,7 @@ pnpm start
 
 ### 使用 Web GUI（推荐）
 
-启动时添加 `--gui` 选项，会自动打开浏览器显示：
+启动示例后，会自动打开浏览器显示：
 - 请求列表（状态、方法、URL、大小、耗时）
 - 请求详情（Headers、Payload、Response、Timing）
 - 过滤和搜索功能
@@ -30,7 +38,7 @@ pnpm start
 禁用自动打开浏览器：
 
 ```bash
-npx node-network-devtools --gui --no-open index.js
+NND_AUTO_OPEN=false node --import node-network-devtools/register index.js
 ```
 
 ## 功能说明

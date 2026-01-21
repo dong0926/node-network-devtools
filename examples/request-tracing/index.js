@@ -4,16 +4,16 @@
  * 演示如何使用 TraceID 关联同一业务流程中的多个请求
  * 
  * 运行方式：
- *   npx node-network-devtools index.js
+ *   node --import ../../dist/esm/register.js index.js
  */
 
 // 注意：在实际使用中，这些会从 node-network-devtools 包导入
-// 这里为了演示，直接从源码导入
+// 这里为了演示，从构建产物导入
 import { 
   runWithTrace, 
   getCurrentTraceId,
   getRequestStore 
-} from '../../src/index.js';
+} from '../../dist/esm/index.js';
 
 console.log('请求追踪示例');
 console.log('打开 chrome://inspect 查看网络请求\n');

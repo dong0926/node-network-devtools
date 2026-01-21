@@ -4,9 +4,7 @@
  * 演示如何使用 node-network-devtools 监听 http 模块的请求
  * 
  * 运行方式：
- *   node --inspect -r ../../src/register.js index.js
- * 或使用 CLI：
- *   npx node-network-devtools index.js
+ *   node --import ../../dist/esm/register.js index.js
  */
 
 import http from 'node:http';
