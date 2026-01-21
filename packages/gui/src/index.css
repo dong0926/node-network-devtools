@@ -19,6 +19,13 @@
   --devtools-method: #8ab4f8;
   --devtools-header-name: #9980ff;
   
+  /* JSON 数据类型颜色 */
+  --devtools-property: #5db0d7;
+  --devtools-string: #f29766;
+  --devtools-number: #9980ff;
+  --devtools-boolean: #9980ff;
+  --devtools-null: #9aa0a6;
+  
   --scrollbar-track: #202124;
   --scrollbar-thumb: #5f6368;
   --scrollbar-thumb-hover: #80868b;
@@ -40,6 +47,13 @@
   --devtools-pending: #5f6368;
   --devtools-method: #1a73e8;
   --devtools-header-name: #7c4dff;
+  
+  /* JSON 数据类型颜色 */
+  --devtools-property: #0086b3;
+  --devtools-string: #c41a16;
+  --devtools-number: #1c00cf;
+  --devtools-boolean: #1c00cf;
+  --devtools-null: #5f6368;
   
   --scrollbar-track: #f1f3f4;
   --scrollbar-thumb: #dadce0;

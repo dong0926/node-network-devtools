@@ -24,16 +24,16 @@
 
 **ESM 项目（`"type": "module"` 或 `.mjs` 文件）：**
 ```typescript
-import { install, getRequestStore } from 'node-network-devtools';
-import 'node-network-devtools/register';
+import { install, getRequestStore } from '@mt0926/node-network-devtools';
+import '@mt0926/node-network-devtools/register';
 
 await install();
 ```
 
 **CommonJS 项目（传统 Node.js 或 `.cjs` 文件）：**
 ```javascript
-const { install, getRequestStore } = require('node-network-devtools');
-require('node-network-devtools/register');
+const { install, getRequestStore } = require('@mt0926/node-network-devtools');
+require('@mt0926/node-network-devtools/register');
 
 (async () => {
   await install();
@@ -42,8 +42,8 @@ require('node-network-devtools/register');
 
 **TypeScript 项目：**
 ```typescript
-import type { Config, IRequestStore } from 'node-network-devtools';
-import { install } from 'node-network-devtools';
+import type { Config, IRequestStore } from '@mt0926/node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 ```
@@ -55,7 +55,7 @@ await install();
 **A:** 直接使用 `require()` 导入即可：
 
 ```javascript
-const { install, setConfig, getRequestStore } = require('node-network-devtools');
+const { install, setConfig, getRequestStore } = require('@mt0926/node-network-devtools');
 
 // 配置（可选）
 setConfig({
@@ -77,7 +77,7 @@ setConfig({
 
 **使用 `-r` 标志自动注册：**
 ```bash
-node -r node-network-devtools/register your-script.js
+node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
 ### Q: 遇到 "require() of ES Module not supported" 错误怎么办？
@@ -120,10 +120,10 @@ node -r node-network-devtools/register your-script.js
 
 ```javascript
 // 在 CommonJS 文件中
-const nnd = require('node-network-devtools'); // 自动使用 CJS 版本
+const nnd = require('@mt0926/node-network-devtools'); // 自动使用 CJS 版本
 
 // 在 ESM 文件中
-import * as nnd from 'node-network-devtools'; // 自动使用 ESM 版本
+import * as nnd from '@mt0926/node-network-devtools'; // 自动使用 ESM 版本
 ```
 
 无需任何配置，一切都是自动的！
@@ -213,7 +213,7 @@ PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true pnpm add puppeteer
 
 ```bash
 # 设置窗口大小
-NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 npx nnd your-script.js
+NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 node --import @mt0926/node-network-devtools/register your-script.js
 
 # 或使用编程配置
 setConfig({
@@ -226,7 +226,7 @@ setConfig({
 **A:** 使用环境变量或配置：
 
 ```bash
-NND_BROWSER_TITLE="我的应用网络监控" npx nnd your-script.js
+NND_BROWSER_TITLE="我的应用网络监控" node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 或：
@@ -328,7 +328,7 @@ GUI 服务器已启动，请手动访问：http://127.0.0.1:xxxxx?wsPort=xxxxx
 ```typescript
 export async function register() {
   if (process.env.NODE_ENV === 'development') {
-    const { install, startGUI } = await import('node-network-devtools');
+    const { install, startGUI } = await import('@mt0926/node-network-devtools');
     
     await install();
     
@@ -372,7 +372,7 @@ export async function register() {
 ```typescript
 export async function register() {
   if (process.env.NODE_ENV === 'development') {
-    const { install, setConfig } = await import('node-network-devtools');
+    const { install, setConfig } = await import('@mt0926/node-network-devtools');
     
     setConfig({
       guiEnabled: false,  // 完全禁用 GUI
@@ -413,7 +413,7 @@ pnpm add node-network-devtools
 **A:** 直接导入即可，包含完整的类型定义：
 
 ```typescript
-import { install, setConfig } from 'node-network-devtools';
+import { install, setConfig } from '@mt0926/node-network-devtools';
 
 await install();
 ```
@@ -426,7 +426,7 @@ await install();
 
 1. **是否在发起请求前安装了拦截器？**
    ```typescript
-   import { install } from 'node-network-devtools';
+   import { install } from '@mt0926/node-network-devtools';
    await install(); // 必须在发起请求前调用
    ```
 
@@ -466,7 +466,7 @@ await install();
 ```typescript
 // 条件安装
 if (process.env.NODE_ENV === 'development') {
-  const { install } = await import('node-network-devtools');
+  const { install } = await import('@mt0926/node-network-devtools');
   await install();
 }
 ```
@@ -486,7 +486,7 @@ node your-app.js
 **A:** 使用配置：
 
 ```typescript
-import { setConfig } from 'node-network-devtools';
+import { setConfig } from '@mt0926/node-network-devtools';
 
 setConfig({
   redactHeaders: [
@@ -502,7 +502,7 @@ setConfig({
 或使用环境变量：
 
 ```bash
-NND_REDACT_HEADERS=authorization,cookie,x-api-key npx nnd your-script.js
+NND_REDACT_HEADERS=authorization,cookie,x-api-key node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 ## 框架集成
@@ -545,7 +545,7 @@ NND_REDACT_HEADERS=authorization,cookie,x-api-key npx nnd your-script.js
 
 ```typescript
 import express from 'express';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -566,7 +566,7 @@ app.get('/api/data', async (req, res) => {
 ```typescript
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 async function bootstrap() {
   await install();
@@ -612,13 +612,13 @@ node --inspect dist/main.js
 **A:** 使用环境变量：
 
 ```bash
-NND_GUI_PORT=8080 npx nnd your-script.js
+NND_GUI_PORT=8080 node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 或编程配置：
 
 ```typescript
-import { setConfig } from 'node-network-devtools';
+import { setConfig } from '@mt0926/node-network-devtools';
 
 setConfig({
   guiPort: 8080,
@@ -643,7 +643,7 @@ setConfig({
 **A:** 使用环境变量：
 
 ```bash
-NND_GUI_ENABLED=false node -r node-network-devtools/register your-script.js
+NND_GUI_ENABLED=false node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
 这样只存储请求数据，不启动 Web GUI 和浏览器窗口。
@@ -657,14 +657,14 @@ NND_GUI_ENABLED=false node -r node-network-devtools/register your-script.js
 ```typescript
 // 方式 1：条件导入
 if (process.env.NODE_ENV === 'development') {
-  const { install } = await import('node-network-devtools');
+  const { install } = await import('@mt0926/node-network-devtools');
   await install();
 }
 
 // 方式 2：使用可选依赖
 try {
   if (process.env.NODE_ENV === 'development') {
-    const nnd = await import('node-network-devtools');
+    const nnd = await import('@mt0926/node-network-devtools');
     await nnd.install();
   }
 } catch (err) {
@@ -833,7 +833,7 @@ setConfig({
 **A:** 使用环境变量：
 
 ```bash
-NND_GUI_ENABLED=false node --inspect -r node-network-devtools/register your-script.js
+NND_GUI_ENABLED=false node --inspect -r @mt0926/node-network-devtools/register your-script.js
 ```
 
 这样只使用 Chrome DevTools，不启动 Web GUI。
@@ -858,7 +858,7 @@ NND_GUI_ENABLED=false node --inspect -r node-network-devtools/register your-scri
 **A:** 默认 1000 个。可以配置：
 
 ```bash
-NND_MAX_REQUESTS=2000 npx nnd your-script.js
+NND_MAX_REQUESTS=2000 node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 或：
@@ -874,7 +874,7 @@ setConfig({ maxRequests: 2000 });
 **A:** 是的。默认限制为 1MB。可以配置：
 
 ```bash
-NND_MAX_BODY_SIZE=2097152 npx nnd your-script.js  # 2MB
+NND_MAX_BODY_SIZE=2097152 node --import @mt0926/node-network-devtools/register your-script.js  # 2MB
 ```
 
 或：
@@ -888,7 +888,7 @@ setConfig({ maxBodySize: 2 * 1024 * 1024 }); // 2MB
 **A:** 在 GUI 中点击 "Clear" 按钮，或编程方式：
 
 ```typescript
-import { getRequestStore } from 'node-network-devtools';
+import { getRequestStore } from '@mt0926/node-network-devtools';
 
 const store = getRequestStore();
 store.clear();
@@ -910,10 +910,10 @@ pnpm add puppeteer
 
 ```bash
 # 旧版本（0.1.x）
-node --inspect -r node-network-devtools/register your-script.js
+node --inspect -r @mt0926/node-network-devtools/register your-script.js
 
 # 新版本（0.2.x）
-node -r node-network-devtools/register your-script.js
+node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
 **3. 移除的配置项：**
@@ -932,10 +932,10 @@ node -r node-network-devtools/register your-script.js
 
 ```typescript
 // 移除的 API
-import { getCDPBridge, isInspectorEnabled } from 'node-network-devtools'; // ❌
+import { getCDPBridge, isInspectorEnabled } from '@mt0926/node-network-devtools'; // ❌
 
 // 新增的配置
-import { setConfig } from 'node-network-devtools';
+import { setConfig } from '@mt0926/node-network-devtools';
 setConfig({
   browserWindowSize: { width: 1024, height: 768 },
   browserWindowTitle: '我的应用',
@@ -1018,7 +1018,7 @@ NND_GUI_ENABLED=false
    ```json
    {
      "dependencies": {
-       "node-network-devtools": "^0.2.0",
+       "@mt0926/node-network-devtools": "^0.2.0",
        "puppeteer": "^23.0.0"
      }
    }
@@ -1052,7 +1052,7 @@ NND_GUI_ENABLED=false
 
 ## 故障排除
 
-### Q: 报错 "Cannot find module 'node-network-devtools'"
+### Q: 报错 "Cannot find module '@mt0926/node-network-devtools'"
 
 **A:** 确保已安装：
 
@@ -1063,7 +1063,7 @@ pnpm install node-network-devtools
 如果使用 `-r` 标志，确保路径正确：
 
 ```bash
-node --inspect -r node-network-devtools/register your-script.js
+node --inspect -r @mt0926/node-network-devtools/register your-script.js
 ```
 
 ### Q: 报错 "Inspector is not enabled"
@@ -1108,7 +1108,7 @@ node --inspect -r node-network-devtools/register your-script.js
 
 3. **使用其他端口**
    ```bash
-   NND_WS_PORT=9999 npx nnd your-script.js
+   NND_WS_PORT=9999 node --import @mt0926/node-network-devtools/register your-script.js
    ```
 
 ### Q: GUI 显示空白页面
@@ -1174,7 +1174,7 @@ NND_GUI_HOST=0.0.0.0 node --inspect=0.0.0.0:9229 your-script.js
 
 ```bash
 # 正确
-node --inspect -r node-network-devtools/register your-script.js
+node --inspect -r @mt0926/node-network-devtools/register your-script.js
 
 # 或
 node --inspect -r node-network-devtools\\register your-script.js

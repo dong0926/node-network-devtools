@@ -184,7 +184,7 @@ if (fs.existsSync(typesDir)) {
   success(`类型定义 source maps: ${dtsMapFiles.length} 个`);
   
   // 验证关键入口文件
-  const keyFiles = ['index.d.ts', 'register.d.ts', 'cli.d.ts', 'config.d.ts'];
+  const keyFiles = ['index.d.ts', 'register.d.ts', 'config.d.ts'];
   for (const file of keyFiles) {
     const fullPath = path.join(typesDir, file);
     if (fs.existsSync(fullPath)) {

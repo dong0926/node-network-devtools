@@ -63,11 +63,11 @@ NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
 ### Installation
 
 ```bash
-npm install node-network-devtools puppeteer
+npm install @mt0926/node-network-devtools puppeteer
 # or
-pnpm add node-network-devtools puppeteer
+pnpm add @mt0926/node-network-devtools puppeteer
 # or
-yarn add node-network-devtools puppeteer
+yarn add @mt0926/node-network-devtools puppeteer
 ```
 
 **Note**: 
@@ -76,33 +76,23 @@ yarn add node-network-devtools puppeteer
 
 ### Usage
 
-#### Method 1: CLI (Recommended)
-
-```bash
-npx node-network-devtools your-script.js
-# or use the short alias
-npx nnd your-script.js
-```
-
-The CLI automatically injects the interceptor and opens the GUI.
-
-#### Method 2: Using `-r` flag
+#### Method 1: Using `-r` or `--import` (Recommended)
 
 **ESM:**
 ```bash
-node --import node-network-devtools/register your-script.js
+node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 **CommonJS:**
 ```bash
-node -r node-network-devtools/register your-script.js
+node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
-#### Method 3: Programmatic
+#### Method 2: Programmatic
 
 **ESM:**
 ```typescript
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -114,7 +104,7 @@ const app = express();
 
 **CommonJS:**
 ```javascript
-const { install } = require('node-network-devtools');
+const { install } = require('@mt0926/node-network-devtools');
 
 (async () => {
   await install();
@@ -166,22 +156,22 @@ The GUI opens in a minimal Puppeteer-controlled browser window:
 
 ```bash
 # Customize window size
-NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 npx nnd your-script.js
+NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 node --import @mt0926/node-network-devtools/register your-script.js
 
 # Customize window title
-NND_BROWSER_TITLE="My App Network Monitor" npx nnd your-script.js
+NND_BROWSER_TITLE="My App Network Monitor" node --import @mt0926/node-network-devtools/register your-script.js
 
 # Specify GUI port
-NND_GUI_PORT=9230 npx nnd your-script.js
+NND_GUI_PORT=9230 node --import @mt0926/node-network-devtools/register your-script.js
 
 # Specify WebSocket port
-NND_WS_PORT=9231 npx nnd your-script.js
+NND_WS_PORT=9231 node --import @mt0926/node-network-devtools/register your-script.js
 
 # Disable GUI
-NND_GUI_ENABLED=false npx nnd your-script.js
+NND_GUI_ENABLED=false node --import @mt0926/node-network-devtools/register your-script.js
 
 # Disable auto-open browser
-NND_AUTO_OPEN=false npx nnd your-script.js
+NND_AUTO_OPEN=false node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 ## 🔧 Configuration
@@ -213,7 +203,7 @@ NND_AUTO_OPEN=false npx nnd your-script.js
 ### Programmatic Configuration
 
 ```typescript
-import { setConfig } from 'node-network-devtools';
+import { setConfig } from '@mt0926/node-network-devtools';
 
 setConfig({
   maxRequests: 500,
@@ -233,7 +223,7 @@ setConfig({
 ```typescript
 // Conditional installation based on environment
 if (process.env.NODE_ENV === 'development') {
-  const { install } = await import('node-network-devtools');
+  const { install } = await import('@mt0926/node-network-devtools');
   await install();
 }
 ```
@@ -283,7 +273,7 @@ Or configure in `package.json`:
 **ESM:**
 ```typescript
 import express from 'express';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -294,7 +284,7 @@ const app = express();
 **CommonJS:**
 ```javascript
 const express = require('express');
-const { install } = require('node-network-devtools');
+const { install } = require('@mt0926/node-network-devtools');
 
 (async () => {
   await install();
@@ -317,8 +307,8 @@ This package supports both **ESM (ECMAScript Modules)** and **CommonJS** module 
 Use `import` statements in projects with `"type": "module"` in package.json or `.mjs` files:
 
 ```typescript
-import { install, getRequestStore } from 'node-network-devtools';
-import 'node-network-devtools/register';
+import { install, getRequestStore } from '@mt0926/node-network-devtools';
+import '@mt0926/node-network-devtools/register';
 
 await install();
 const store = getRequestStore();
@@ -329,8 +319,8 @@ const store = getRequestStore();
 Use `require()` statements in traditional Node.js projects or `.cjs` files:
 
 ```javascript
-const { install, getRequestStore } = require('node-network-devtools');
-require('node-network-devtools/register');
+const { install, getRequestStore } = require('@mt0926/node-network-devtools');
+require('@mt0926/node-network-devtools/register');
 
 (async () => {
   await install();
@@ -343,8 +333,8 @@ require('node-network-devtools/register');
 Full TypeScript support with type definitions for both module systems:
 
 ```typescript
-import type { Config, IRequestStore } from 'node-network-devtools';
-import { install, getRequestStore } from 'node-network-devtools';
+import type { Config, IRequestStore } from '@mt0926/node-network-devtools';
+import { install, getRequestStore } from '@mt0926/node-network-devtools';
 
 const config: Config = {
   maxRequests: 500,
@@ -371,23 +361,23 @@ No configuration needed - it just works! 🎉
 
 ```typescript
 // Quick install
-import { install, startGUI, stopGUI } from 'node-network-devtools';
+import { install, startGUI, stopGUI } from '@mt0926/node-network-devtools';
 
 // Configuration
-import { getConfig, setConfig, resetConfig } from 'node-network-devtools';
+import { getConfig, setConfig, resetConfig } from '@mt0926/node-network-devtools';
 
 // Request store
-import { getRequestStore } from 'node-network-devtools';
+import { getRequestStore } from '@mt0926/node-network-devtools';
 
 // Context tracing
 import { 
   runWithTrace, 
   getCurrentTraceId,
   generateTraceId 
-} from 'node-network-devtools';
+} from '@mt0926/node-network-devtools';
 
 // Interceptors
-import { HttpPatcher, UndiciPatcher } from 'node-network-devtools';
+import { HttpPatcher, UndiciPatcher } from '@mt0926/node-network-devtools';
 ```
 
 ### Request Tracing
@@ -395,7 +385,7 @@ import { HttpPatcher, UndiciPatcher } from 'node-network-devtools';
 Correlate multiple requests in the same business flow:
 
 ```typescript
-import { runWithTrace, getRequestStore } from 'node-network-devtools';
+import { runWithTrace, getRequestStore } from '@mt0926/node-network-devtools';
 
 await runWithTrace('user-login', async () => {
   // These requests will be correlated with the same traceId

@@ -423,7 +423,7 @@ NND_AUTO_OPEN=false node your-script.js
 
 ```bash
 # 环境变量
-NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 npx nnd your-script.js
+NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 node --import node-network-devtools/register your-script.js
 
 # 或编程配置
 setConfig({
@@ -469,7 +469,7 @@ Error: listen EADDRINUSE: address already in use :::9229
 
 2. 终止进程或使用其他端口：
    ```bash
-   NND_GUI_PORT=8080 npx nnd your-script.js
+   NND_GUI_PORT=8080 node --import node-network-devtools/register your-script.js
    ```
 
 ### 问题：模块找不到
@@ -602,7 +602,7 @@ axios 使用自己的 HTTP 实现，目前不支持拦截。
 
 3. 使用其他端口：
    ```bash
-   NND_WS_PORT=9999 npx nnd your-script.js
+   NND_WS_PORT=9999 node --import node-network-devtools/register your-script.js
    ```
 
 ### 问题：WebSocket 连接失败
@@ -624,7 +624,7 @@ WebSocket connection to 'ws://localhost:9230' failed
 
 2. 使用其他端口：
    ```bash
-   NND_WS_PORT=9999 npx nnd your-script.js
+   NND_WS_PORT=9999 node --import node-network-devtools/register your-script.js
    ```
 
 3. 检查防火墙设置
@@ -710,12 +710,12 @@ const app = express();
 **解决方案：**
 1. 减少存储的请求数量：
    ```bash
-   NND_MAX_REQUESTS=100 npx nnd your-script.js
+   NND_MAX_REQUESTS=100 node --import node-network-devtools/register your-script.js
    ```
 
 2. 禁用 GUI（只使用 Chrome DevTools）：
    ```bash
-   NND_GUI_ENABLED=false npx nnd your-script.js
+   NND_GUI_ENABLED=false node --import node-network-devtools/register your-script.js
    ```
 
 3. 在生产环境禁用：

@@ -247,7 +247,6 @@ describe('向后兼容性保持属性测试', () => {
       'dist/esm/index.js',
       'dist/esm/register.js',
       'dist/esm/config.js',
-      'dist/esm/cli.js',
     ];
 
     fc.assert(
@@ -286,7 +285,6 @@ describe('向后兼容性保持属性测试', () => {
       'dist/types/index.d.ts',
       'dist/types/register.d.ts',
       'dist/types/config.d.ts',
-      'dist/types/cli.d.ts',
     ];
 
     fc.assert(
@@ -413,46 +411,6 @@ describe('向后兼容性保持属性测试', () => {
     // ESM 文件不应该包含 module.exports
     const hasModuleExports = /module\.exports\s*=/m.test(content);
     expect(hasModuleExports, 'ESM 文件不应该包含 module.exports').toBe(false);
-  });
-
-  /**
-   * Feature: commonjs-build-support, Property 5: 向后兼容性保持
-   * 
-   * 验证 bin 字段仍然指向 ESM CLI
-   * 
-   * **Validates: Requirements 1.4**
-   */
-  it('Property 5j: bin 字段仍然指向 ESM CLI', () => {
-    const pkgPath = 'package.json';
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-
-    // bin 字段必须存在
-    expect(pkg.bin).toBeDefined();
-
-    // 所有 bin 命令都应该指向 dist/esm
-    const binCommands = Object.keys(pkg.bin);
-
-    fc.assert(
-      fc.property(
-        fc.constantFrom(...binCommands),
-        (command) => {
-          const binPath = pkg.bin[command];
-          const pointsToEsm = binPath.includes('dist/esm');
-
-          if (!pointsToEsm) {
-            console.log(`\n❌ bin 命令未指向 ESM:`);
-            console.log(`   命令: ${command}`);
-            console.log(`   路径: ${binPath}`);
-          }
-
-          return pointsToEsm;
-        }
-      ),
-      {
-        numRuns: 100,
-        verbose: true,
-      }
-    );
   });
 
   /**

@@ -24,6 +24,11 @@ export default {
           'pending': 'var(--devtools-pending)',
           'method': 'var(--devtools-method)',
           'header-name': 'var(--devtools-header-name)',
+          'property': 'var(--devtools-property)',
+          'string': 'var(--devtools-string)',
+          'number': 'var(--devtools-number)',
+          'boolean': 'var(--devtools-boolean)',
+          'null': 'var(--devtools-null)',
         }
       },
       fontFamily: {

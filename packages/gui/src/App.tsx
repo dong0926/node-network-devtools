@@ -132,7 +132,7 @@ function App() {
       />
 
       {/* 主内容区域 */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex overflow-hidden relative">
         {/* 请求列表 */}
         <RequestList
           requests={filteredRequests}
@@ -141,12 +141,22 @@ function App() {
           totalCount={totalCount}
         />
 
+        {/* 遮罩层 - 仅在移动设备上显示 */}
+        {selectedRequest && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
+            onClick={handleCloseDetail}
+            aria-label="关闭详情面板"
+          />
+        )}
+
         {/* 详情面板 */}
         {selectedRequest && (
-          <DetailPanel
-            request={selectedRequest}
-            onClose={handleCloseDetail}
-          />
+          <div className="fixed right-0 top-0 bottom-0 z-20 md:relative md:z-auto">
+            <DetailPanel
+              request={selectedRequest}
+            />
+          </div>
         )}
       </main>
 

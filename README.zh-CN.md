@@ -63,37 +63,33 @@ NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
 ### 安装
 
 ```bash
-npm install node-network-devtools puppeteer
+npm install @mt0926/node-network-devtools puppeteer
 # 或
-pnpm add node-network-devtools puppeteer
+pnpm add @mt0926/node-network-devtools puppeteer
 # 或
-yarn add node-network-devtools puppeteer
+yarn add @mt0926/node-network-devtools puppeteer
 ```
 
 **注意**：Puppeteer 是 GUI 浏览器窗口所必需的。如果未安装，您会看到友好的错误消息和安装指引。
 
 ### 使用
 
-#### 方式一：CLI（推荐）
+#### 方式一：使用 `-r` 或 `--import` (推荐)
 
+**ESM:**
 ```bash
-npx node-network-devtools your-script.js
-# 或使用短别名
-npx nnd your-script.js
+node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
-CLI 会自动注入拦截器并打开 GUI。
-
-#### 方式二：使用 `-r` 标志
-
+**CommonJS:**
 ```bash
-node -r node-network-devtools/register your-script.js
+node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
-#### 方式三：编程方式
+#### 方式二：编程方式
 
 ```typescript
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -143,22 +139,22 @@ GUI 在极简的 Puppeteer 控制的浏览器窗口中打开：
 
 ```bash
 # 自定义窗口大小
-NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 npx nnd your-script.js
+NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 node --import @mt0926/node-network-devtools/register your-script.js
 
 # 自定义窗口标题
-NND_BROWSER_TITLE="我的应用网络监控" npx nnd your-script.js
+NND_BROWSER_TITLE="我的应用网络监控" node --import @mt0926/node-network-devtools/register your-script.js
 
 # 指定 GUI 端口
-NND_GUI_PORT=9230 npx nnd your-script.js
+NND_GUI_PORT=9230 node --import @mt0926/node-network-devtools/register your-script.js
 
 # 指定 WebSocket 端口
-NND_WS_PORT=9231 npx nnd your-script.js
+NND_WS_PORT=9231 node --import @mt0926/node-network-devtools/register your-script.js
 
 # 禁用 GUI
-NND_GUI_ENABLED=false npx nnd your-script.js
+NND_GUI_ENABLED=false node --import @mt0926/node-network-devtools/register your-script.js
 
 # 禁用自动打开浏览器
-NND_AUTO_OPEN=false npx nnd your-script.js
+NND_AUTO_OPEN=false node --import @mt0926/node-network-devtools/register your-script.js
 ```
 
 ## 🔧 配置
@@ -190,7 +186,7 @@ NND_AUTO_OPEN=false npx nnd your-script.js
 ### 编程配置
 
 ```typescript
-import { setConfig } from 'node-network-devtools';
+import { setConfig } from '@mt0926/node-network-devtools';
 
 setConfig({
   maxRequests: 500,
@@ -210,7 +206,7 @@ setConfig({
 ```typescript
 // 根据环境条件安装
 if (process.env.NODE_ENV === 'development') {
-  const { install } = await import('node-network-devtools');
+  const { install } = await import('@mt0926/node-network-devtools');
   await install();
 }
 ```
@@ -259,7 +255,7 @@ npm run dev
 
 ```typescript
 import express from 'express';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -277,23 +273,23 @@ const app = express();
 
 ```typescript
 // 快速安装
-import { install, startGUI, stopGUI } from 'node-network-devtools';
+import { install, startGUI, stopGUI } from '@mt0926/node-network-devtools';
 
 // 配置
-import { getConfig, setConfig, resetConfig } from 'node-network-devtools';
+import { getConfig, setConfig, resetConfig } from '@mt0926/node-network-devtools';
 
 // 请求存储
-import { getRequestStore } from 'node-network-devtools';
+import { getRequestStore } from '@mt0926/node-network-devtools';
 
 // 上下文追踪
 import { 
   runWithTrace, 
   getCurrentTraceId,
   generateTraceId 
-} from 'node-network-devtools';
+} from '@mt0926/node-network-devtools';
 
 // 拦截器
-import { HttpPatcher, UndiciPatcher } from 'node-network-devtools';
+import { HttpPatcher, UndiciPatcher } from '@mt0926/node-network-devtools';
 ```
 
 ### 请求追踪
@@ -301,7 +297,7 @@ import { HttpPatcher, UndiciPatcher } from 'node-network-devtools';
 关联同一业务流程中的多个请求：
 
 ```typescript
-import { runWithTrace, getRequestStore } from 'node-network-devtools';
+import { runWithTrace, getRequestStore } from '@mt0926/node-network-devtools';
 
 await runWithTrace('user-login', async () => {
   // 这些请求会被关联到同一个 traceId

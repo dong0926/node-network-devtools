@@ -5,25 +5,29 @@
 ## 📦 安装
 
 ```bash
-pnpm add node-network-devtools puppeteer
+pnpm add @mt0926/node-network-devtools puppeteer
 # 或
-npm install node-network-devtools puppeteer
+npm install @mt0926/node-network-devtools puppeteer
 # 或
-yarn add node-network-devtools puppeteer
+yarn add @mt0926/node-network-devtools puppeteer
 ```
 
 **注意**：Puppeteer 是必需的，用于启动 GUI 浏览器窗口。如果未安装，会看到友好的错误提示。
 
-## 🚀 三种使用方式
+## 🚀 两种使用方式
 
-### 方式 1：CLI（最简单）
+### 方式 1：零侵入（最简单）
 
+通过 Node.js 的 `--import` (ESM) 或 `-r` (CommonJS) 标志注入注册入口。
+
+**ESM:**
 ```bash
-# 使用完整命令
-npx node-network-devtools your-script.js
+@mt0926/node-network-devtools/register your-script.js
+```
 
-# 或使用短别名
-npx nnd your-script.js
+**CommonJS:**
+```bash
+node -r node-network-devtools/register your-script.js
 ```
 
 这会自动：
@@ -31,17 +35,11 @@ npx nnd your-script.js
 - ✅ 启动 GUI 服务器
 - ✅ 打开极简浏览器窗口
 
-### 方式 2：使用 -r 标志
-
-```bash
-node -r node-network-devtools/register your-script.js
-```
-
-### 方式 3：编程方式
+### 方式 2：编程方式
 
 ```typescript
 // 在你的入口文件顶部
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -81,7 +79,7 @@ const app = express();
 
 1. 复制 instrumentation 文件：
 ```bash
-cp node_modules/node-network-devtools/templates/instrumentation.ts ./
+cp node_modules/@mt0926/node-network-devtools/templates/instrumentation.ts ./
 ```
 
 2. 启用 instrumentation（`next.config.js`）：
@@ -104,7 +102,7 @@ npm run dev
 
 ```typescript
 import express from 'express';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 // 在创建 app 之前安装
 await install();
@@ -128,28 +126,28 @@ app.listen(3000);
 
 ```bash
 # 自定义浏览器窗口大小
-NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 npx nnd your-script.js
+NND_BROWSER_WIDTH=1024 NND_BROWSER_HEIGHT=768 @mt0926/node-network-devtools/register your-script.js
 
 # 自定义窗口标题
-NND_BROWSER_TITLE="我的应用网络监控" npx nnd your-script.js
+NND_BROWSER_TITLE="我的应用网络监控" @mt0926/node-network-devtools/register your-script.js
 
 # 指定 GUI 端口
-NND_GUI_PORT=9230 npx nnd your-script.js
+NND_GUI_PORT=9230 @mt0926/node-network-devtools/register your-script.js
 
 # 禁用自动打开浏览器
-NND_AUTO_OPEN=false npx nnd your-script.js
+NND_AUTO_OPEN=false @mt0926/node-network-devtools/register your-script.js
 
 # 禁用 GUI（仅存储请求数据）
-NND_GUI_ENABLED=false npx nnd your-script.js
+NND_GUI_ENABLED=false @mt0926/node-network-devtools/register your-script.js
 
 # 增加存储的请求数量
-NND_MAX_REQUESTS=2000 npx nnd your-script.js
+NND_MAX_REQUESTS=2000 @mt0926/node-network-devtools/register your-script.js
 ```
 
 ### 编程配置
 
 ```typescript
-import { setConfig, install } from 'node-network-devtools';
+import { setConfig, install } from '@mt0926/node-network-devtools';
 
 setConfig({
   maxRequests: 500,
@@ -170,7 +168,7 @@ await install();
 ```typescript
 // 条件安装
 if (process.env.NODE_ENV === 'development') {
-  const { install } = await import('node-network-devtools');
+  const { install } = await import('@mt0926/node-network-devtools');
   await install();
 }
 ```
@@ -185,7 +183,7 @@ NODE_ENV=production NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
 关联同一业务流程中的多个请求：
 
 ```typescript
-import { runWithTrace } from 'node-network-devtools';
+import { runWithTrace } from '@mt0926/node-network-devtools';
 
 await runWithTrace('user-login', async () => {
   // 这些请求会被关联到同一个 traceId
@@ -203,7 +201,7 @@ await runWithTrace('user-login', async () => {
 
 ```typescript
 import http from 'http';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -216,7 +214,7 @@ http.get('http://api.example.com/users', (res) => {
 ### 监控 Fetch 请求
 
 ```typescript
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -229,7 +227,7 @@ const data = await response.json();
 
 ```typescript
 import express from 'express';
-import { install } from 'node-network-devtools';
+import { install } from '@mt0926/node-network-devtools';
 
 await install();
 
@@ -291,7 +289,7 @@ CI=true NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
 
 **A:** 自定义窗口大小：
 ```bash
-NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 npx nnd your-script.js
+NND_BROWSER_WIDTH=1280 NND_BROWSER_HEIGHT=720 @mt0926/node-network-devtools/register your-script.js
 ```
 
 ## 📚 下一步

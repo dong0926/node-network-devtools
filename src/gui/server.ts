@@ -30,8 +30,10 @@ if (typeof __dirname !== 'undefined') {
     // eslint-disable-next-line no-eval
     const importMetaUrl = eval('import.meta.url');
     currentDirname = dirname(fileURLToPath(importMetaUrl));
-  } catch {
-    // 后备方案
+  } catch (error) {
+    // 后备方案：尝试从 module 路径推断
+    // 这种情况不应该发生，但作为最后的后备
+    console.error('[GUI Server] 无法确定模块目录，使用 process.cwd() 作为后备:', error);
     currentDirname = process.cwd();
   }
 }
@@ -105,7 +107,10 @@ class GUIServerImpl implements IGUIServer {
     this.eventBridge = eventBridge ?? getEventBridge();
     this.host = host;
     // 静态文件目录：dist/gui（构建后的前端文件）
-    // currentDirname 在 ESM 中指向 dist/esm/gui，所以需要 ../../gui
+    // 需要处理两种情况：
+    // 1. 开发环境：currentDirname 指向 dist/esm/gui 或 dist/cjs/gui
+    // 2. 安装后：currentDirname 指向 node_modules/@mt0926/node-network-devtools/dist/esm/gui 或 dist/cjs/gui
+    // 在两种情况下，都需要向上两级到 dist 目录，然后进入 gui 目录
     this.staticDir = join(currentDirname, '../../gui');
   }
 

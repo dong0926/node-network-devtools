@@ -12,3 +12,4 @@ export { ResponseTab } from './ResponseTab';
 export { TimingTab } from './TimingTab';
 export { StatusBar } from './StatusBar';
 export { ThemeToggle } from './ThemeToggle';
+export { Resizer } from './Resizer';

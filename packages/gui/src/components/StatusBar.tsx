@@ -66,30 +66,30 @@ export function StatusBar({
   const showFiltered = displayCount !== totalCount;
 
   return (
-    <footer className="h-6 flex items-center px-4 border-t border-devtools-border bg-devtools-bg-secondary text-xs text-devtools-text-secondary">
+    <footer className="h-6 flex items-center px-2 sm:px-4 border-t border-devtools-border bg-devtools-bg-secondary text-xs text-devtools-text-secondary overflow-x-auto">
       {/* 请求数 */}
-      <span>
+      <span className="whitespace-nowrap">
         {showFiltered ? `${displayCount} / ${totalCount}` : totalCount} 个请求
       </span>
 
-      <span className="mx-2">|</span>
+      <span className="mx-1 sm:mx-2">|</span>
 
       {/* 传输大小 */}
-      <span>{formatBytes(totalSize)} 传输</span>
+      <span className="whitespace-nowrap">{formatBytes(totalSize)} 传输</span>
 
       {/* 暂停状态 */}
       {isPaused && (
         <>
-          <span className="mx-2">|</span>
-          <span className="text-devtools-warning">已暂停</span>
+          <span className="mx-1 sm:mx-2">|</span>
+          <span className="text-devtools-warning whitespace-nowrap">已暂停</span>
         </>
       )}
 
       {/* 弹性空间 */}
-      <div className="flex-1" />
+      <div className="flex-1 min-w-2" />
 
       {/* 连接状态 */}
-      <span className={getConnectionStatusColorClass(connectionStatus)}>
+      <span className={`${getConnectionStatusColorClass(connectionStatus)} whitespace-nowrap`}>
         {getConnectionStatusText(connectionStatus)}
       </span>
     </footer>

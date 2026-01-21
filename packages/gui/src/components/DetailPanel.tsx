@@ -9,13 +9,15 @@ import { HeadersTab } from './HeadersTab';
 import { PayloadTab } from './PayloadTab';
 import { ResponseTab } from './ResponseTab';
 import { TimingTab } from './TimingTab';
+import { Resizer } from './Resizer';
+import { useResizablePanel } from '../hooks/useResizablePanel';
 import type { UIRequest } from '../hooks';
 
 interface DetailPanelProps {
   /** 选中的请求 */
   request: UIRequest;
-  /** 关闭面板回调 */
-  onClose: () => void;
+  /** 初始宽度（可选，像素） */
+  initialWidth?: number;
 }
 
 /**
@@ -36,31 +38,38 @@ const TABS: { id: TabType; label: string }[] = [
 /**
  * 详情面板组件
  */
-export function DetailPanel({ request, onClose }: DetailPanelProps) {
+export function DetailPanel({ request, initialWidth }: DetailPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('headers');
 
+  // 使用可调整大小面板 Hook
+  const { width, setWidth, resetWidth, startDragging, stopDragging } = useResizablePanel({
+    defaultWidth: initialWidth ?? '40%',
+    minWidth: 300,
+    maxWidth: '80%',
+    storageKey: 'nnd-detail-panel-width',
+  });
+
   return (
-    <div className="w-96 border-l border-devtools-border flex flex-col bg-devtools-bg">
-      {/* 面板头部 */}
-      <div className="h-8 flex items-center justify-between px-3 border-b border-devtools-border bg-devtools-bg-secondary shrink-0">
-        <span className="text-xs text-devtools-text font-medium truncate flex-1 mr-2">
-          {request.method} {request.url}
-        </span>
-        <button
-          className="text-devtools-text-secondary hover:text-devtools-text text-sm"
-          onClick={onClose}
-          title="关闭"
-        >
-          ✕
-        </button>
+    <div className="h-full border-l border-devtools-border flex flex-col bg-devtools-bg w-full md:w-auto" style={{ width: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${width}px` : '100%' }}>
+      {/* Resizer 分隔条 - 仅在桌面设备上显示 */}
+      <div className="hidden md:block">
+        <Resizer
+          width={width}
+          onWidthChange={setWidth}
+          minWidth={300}
+          maxWidth={typeof window !== 'undefined' ? window.innerWidth * 0.8 : undefined}
+          onReset={resetWidth}
+          onDragStart={startDragging}
+          onDragEnd={stopDragging}
+        />
       </div>
 
       {/* 标签页导航 */}
-      <div className="h-7 flex items-center px-2 border-b border-devtools-border bg-devtools-bg shrink-0">
+      <div className="h-7 flex items-center px-2 border-b border-devtools-border bg-devtools-bg shrink-0 overflow-x-auto">
         {TABS.map(tab => (
           <button
             key={tab.id}
-            className={`px-3 py-1 text-xs ${
+            className={`px-2 sm:px-3 py-1 text-xs whitespace-nowrap ${
               activeTab === tab.id
                 ? 'text-devtools-accent border-b-2 border-devtools-accent'
                 : 'text-devtools-text-secondary hover:text-devtools-text'
@@ -81,7 +90,7 @@ export function DetailPanel({ request, onClose }: DetailPanelProps) {
           />
         )}
         {activeTab === 'payload' && (
-          <PayloadTab body={request.requestBody} />
+          <PayloadTab body={request.requestBody} url={request.url} />
         )}
         {activeTab === 'response' && (
           <ResponseTab

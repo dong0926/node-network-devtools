@@ -93,18 +93,18 @@ export function Toolbar({
   onClear,
 }: ToolbarProps) {
   return (
-    <div className="h-8 flex items-center px-2 gap-2 border-b border-devtools-border bg-devtools-bg">
+    <div className="h-8 flex items-center px-2 gap-1 sm:gap-2 border-b border-devtools-border bg-devtools-bg overflow-x-auto">
       {/* 搜索输入框 */}
       <input
         type="text"
-        placeholder="过滤请求..."
+        placeholder="过滤..."
         value={filters.search}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-48 h-6 px-2 text-xs bg-devtools-bg-secondary border border-devtools-border rounded text-devtools-text placeholder-devtools-text-secondary focus:outline-none focus:border-devtools-accent"
+        className="w-32 sm:w-48 h-6 px-2 text-xs bg-devtools-bg-secondary border border-devtools-border rounded text-devtools-text placeholder-devtools-text-secondary focus:outline-none focus:border-devtools-accent shrink-0"
       />
 
       {/* 分隔符 */}
-      <div className="w-px h-4 bg-devtools-border" />
+      <div className="w-px h-4 bg-devtools-border shrink-0" />
 
       {/* 方法过滤 */}
       <FilterDropdown
@@ -133,7 +133,7 @@ export function Toolbar({
       {/* 重置过滤器 */}
       {hasActiveFilters && (
         <button
-          className="px-2 py-0.5 text-xs rounded bg-devtools-bg-secondary text-devtools-text-secondary hover:bg-devtools-bg-hover"
+          className="px-2 py-0.5 text-xs rounded bg-devtools-bg-secondary text-devtools-text-secondary hover:bg-devtools-bg-hover whitespace-nowrap shrink-0"
           onClick={onResetFilters}
         >
           重置
@@ -141,14 +141,14 @@ export function Toolbar({
       )}
 
       {/* 弹性空间 */}
-      <div className="flex-1" />
+      <div className="flex-1 min-w-2" />
 
       {/* 分隔符 */}
-      <div className="w-px h-4 bg-devtools-border" />
+      <div className="w-px h-4 bg-devtools-border shrink-0" />
 
       {/* 暂停/恢复按钮 */}
       <button
-        className={`px-2 py-0.5 text-xs rounded ${
+        className={`px-2 py-0.5 text-xs rounded shrink-0 ${
           isPaused
             ? 'bg-devtools-warning text-devtools-bg'
             : 'bg-devtools-bg-secondary text-devtools-text-secondary hover:bg-devtools-bg-hover'
@@ -161,7 +161,7 @@ export function Toolbar({
 
       {/* 清空按钮 */}
       <button
-        className="px-2 py-0.5 text-xs rounded bg-devtools-bg-secondary text-devtools-text-secondary hover:bg-devtools-bg-hover"
+        className="px-2 py-0.5 text-xs rounded bg-devtools-bg-secondary text-devtools-text-secondary hover:bg-devtools-bg-hover shrink-0"
         onClick={onClear}
         title="清空请求"
       >

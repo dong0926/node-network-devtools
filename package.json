@@ -28,10 +28,6 @@
       }
     }
   },
-  "bin": {
-    "node-network-devtools": "./dist/esm/cli.js",
-    "nnd": "./dist/esm/cli.js"
-  },
   "files": [
     "dist",
     "templates",

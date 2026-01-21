@@ -13,3 +13,6 @@ export type { FilterState } from './useFilters';
 
 export { useTheme } from './useTheme';
 export type { Theme } from './useTheme';
+
+export { useResizablePanel } from './useResizablePanel';
+export type { UseResizablePanelOptions, UseResizablePanelReturn } from './useResizablePanel';
