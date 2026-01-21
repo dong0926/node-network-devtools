@@ -6,10 +6,7 @@
 *实时监控所有 HTTP、HTTPS 和 Fetch/Undici 请求，提供类似 Chrome DevTools 的极简 Web GUI 体验。*
 
 [![npm version](https://img.shields.io/npm/v/@mt0926/node-network-devtools.svg)](https://www.npmjs.com/package/@mt0926/node-network-devtools)
-[![CI](https://github.com/dong0926/node-network-devtools/actions/workflows/ci.yml/badge.svg)](https://github.com/dong0926/node-network-devtools/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/dong0926/node-network-devtools/branch/master/graph/badge.svg)](https://codecov.io/gh/dong0926/node-network-devtools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/node-network-devtools.svg)](https://nodejs.org)
 
 [English](./README.md) | [中文文档](#)
 
