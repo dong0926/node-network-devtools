@@ -6,6 +6,7 @@
 
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getConfig } from '../config.js';
@@ -107,11 +108,23 @@ class GUIServerImpl implements IGUIServer {
     this.eventBridge = eventBridge ?? getEventBridge();
     this.host = host;
     // 静态文件目录：dist/gui（构建后的前端文件）
-    // 需要处理两种情况：
-    // 1. 开发环境：currentDirname 指向 dist/esm/gui 或 dist/cjs/gui
-    // 2. 安装后：currentDirname 指向 node_modules/@mt0926/node-network-devtools/dist/esm/gui 或 dist/cjs/gui
-    // 在两种情况下，都需要向上两级到 dist 目录，然后进入 gui 目录
-    this.staticDir = join(currentDirname, '../../gui');
+    // 我们需要确保在不同环境下都能找到该目录：
+    // 1. 开发环境运行 tsx: currentDirname 是 src/gui，路径应为 ../../dist/gui
+    // 2. 编译后运行: currentDirname 是 dist/esm/gui 或 dist/cjs/gui，路径应为 ../../gui
+    
+    const possiblePaths = [
+      join(currentDirname, '../../gui'), // 编译后路径
+      join(currentDirname, '../../../dist/gui'), // 开发环境(tsx)路径
+      join(process.cwd(), 'dist/gui'), // 后备路径
+    ];
+
+    this.staticDir = possiblePaths[0];
+    for (const p of possiblePaths) {
+      if (existsSync(p) && existsSync(join(p, 'index.html'))) {
+        this.staticDir = p;
+        break;
+      }
+    }
   }
 
   /**
