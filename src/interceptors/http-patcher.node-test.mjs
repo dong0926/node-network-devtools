@@ -401,5 +401,3 @@ describe('HttpPatcher', () => {
     });
   });
 });
-
-console.log('HTTP 拦截器测试完成');

@@ -282,5 +282,3 @@ describe('UndiciPatcher', () => {
     });
   });
 });
-
-console.log('Undici/Fetch 拦截器测试完成');
