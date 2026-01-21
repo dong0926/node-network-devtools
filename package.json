@@ -40,7 +40,7 @@
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:cjs-package": "node scripts/create-cjs-package.js",
     "build:types": "tsc -p tsconfig.types.json",
-    "build:gui": "cd packages/gui && pnpm build",
+    "build:gui": "cd packages/gui && pnpm install && pnpm build",
     "test": "vitest run",
     "test:http": "npx tsx --test src/interceptors/http-patcher.node-test.mjs",
     "test:undici": "npx tsx --test src/interceptors/undici-patcher.node-test.mjs",
