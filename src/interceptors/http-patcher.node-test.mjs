@@ -48,7 +48,6 @@ before(async () => {
   await new Promise((resolve) => {
     server.listen(0, () => {
       serverPort = server.address().port;
-      console.log(`测试服务器启动在端口 ${serverPort}`);
       resolve();
     });
   });

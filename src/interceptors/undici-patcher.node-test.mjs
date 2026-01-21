@@ -45,7 +45,6 @@ before(async () => {
   await new Promise((resolve) => {
     server.listen(0, () => {
       serverPort = server.address().port;
-      console.log(`测试服务器启动在端口 ${serverPort}`);
       resolve();
     });
   });
@@ -72,14 +71,12 @@ describe('UndiciPatcher', () => {
   describe('install/uninstall', () => {
     test('should check if undici is available', () => {
       const available = UndiciPatcher.isUndiciAvailable();
-      console.log('undici 可用:', available);
       // undici 可能已安装也可能未安装
       assert.ok(typeof available === 'boolean');
     });
 
     test('should install and uninstall correctly', () => {
       if (!UndiciPatcher.isUndiciAvailable()) {
-        console.log('跳过测试：undici 不可用');
         return;
       }
 
@@ -94,7 +91,6 @@ describe('UndiciPatcher', () => {
 
     test('should be idempotent', () => {
       if (!UndiciPatcher.isUndiciAvailable()) {
-        console.log('跳过测试：undici 不可用');
         return;
       }
 
@@ -111,7 +107,6 @@ describe('UndiciPatcher', () => {
   describe('Property 6: 双栈拦截一致性 - fetch 请求捕获', () => {
     test('should capture fetch request URL correctly', async () => {
       if (!UndiciPatcher.isUndiciAvailable()) {
-        console.log('跳过测试：undici 不可用');
         return;
       }
 
