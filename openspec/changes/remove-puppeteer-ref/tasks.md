@@ -1,0 +1,2 @@
+- [x] Remove Puppeteer from `README.md` and update description <!-- id: 0 -->
+- [x] Remove Puppeteer from `README.zh-CN.md` and update description <!-- id: 1 -->

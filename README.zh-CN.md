@@ -2,9 +2,12 @@
 
 # 🔍 Node Network DevTools
 
-**Node.js 网络请求监控工具，集成 Chrome DevTools 和内置 Web GUI**
+**Node.js 强大的零配置网络调试助手。**  
+*实时监控所有 HTTP、HTTPS 和 Fetch/Undici 请求，提供类似 Chrome DevTools 的极简 Web GUI 体验。*
 
-[![npm version](https://img.shields.io/npm/v/node-network-devtools.svg)](https://www.npmjs.com/package/node-network-devtools)
+[![npm version](https://img.shields.io/npm/v/@mt0926/node-network-devtools.svg)](https://www.npmjs.com/package/@mt0926/node-network-devtools)
+[![CI](https://github.com/dong0926/node-network-devtools/actions/workflows/ci.yml/badge.svg)](https://github.com/dong0926/node-network-devtools/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/dong0926/node-network-devtools/branch/master/graph/badge.svg)](https://codecov.io/gh/dong0926/node-network-devtools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/node-network-devtools.svg)](https://nodejs.org)
 
@@ -14,67 +17,61 @@
 
 ---
 
-## ⚠️ 仅限开发环境使用
+## 🚀 为什么选择 Node Network DevTools?
 
-**本工具仅用于开发环境，请勿在生产环境中使用！**
-
-- 使用 Puppeteer 启动极简浏览器窗口显示 GUI
-- 拦截所有网络请求可能影响性能
-- 在内存中存储请求/响应数据
-- 不适合生产环境工作负载
-
-### 在生产环境中禁用
-
-```javascript
-// 条件安装
-if (process.env.NODE_ENV === 'development') {
-  await install();
-}
-```
-
-或使用环境变量：
-
-```bash
-# 禁用 GUI 和自动打开
-NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
-```
+还在用 `console.log` 打印每一个请求和响应吗？**Node Network DevTools** 将浏览器“网络”面板的熟悉体验带到了 Node.js 后端。无论是在调试外部 API 调用、微服务还是 Next.js Server Actions，你都可以实时查看每一个细节。
 
 ## ✨ 特性
 
-- 🔍 **双重拦截** - 同时支持 `http/https` 模块和 `undici/fetch` API
-- 🎯 **零侵入** - 通过 `-r` 或 `--import` 自动注入，无需修改代码
-- 🖥️ **极简浏览器窗口** - Puppeteer 驱动的紧凑 GUI 窗口（800x600）
-- 📊 **内置 Web GUI** - 类似 Chrome DevTools 的界面，实时更新
-- 🔗 **请求追踪** - 基于 AsyncLocalStorage 的请求关联
-- 🛡️ **安全性** - 自动脱敏敏感请求头（Authorization、Cookie 等）
-- ⚡ **Next.js 兼容** - 保留 `next.revalidate`、`next.tags` 等选项
-- 📦 **TypeScript** - 完整的 TypeScript 支持和类型定义
+- 💎 **类似 DevTools 的体验** - 熟悉的响应式 Web GUI，用于检查 Header、Payload 和 Response。
+- 🔌 **全能拦截** - 原生支持 `http/https` 模块以及现代的 `fetch/undici` (Node.js 18+)。
+- 🛠️ **零侵入开发** - 只需一行代码或一个简单的 CLI 标志即可接入项目。
+- 🖥️ **极简浏览器窗口** - 自动启动基于系统原生浏览器 (Chrome, Edge, 或 Chromium) 的紧凑 App 模式窗口。
+- 🔗 **智能请求追踪** - 利用 `AsyncLocalStorage` 自动关联同一业务流中的多个异步请求。
+- 🛡️ **内置脱敏** - 自动隐藏 `Authorization` 和 `Cookie` 等敏感信息，保障安全。
+- ⚡ **框架友好** - 无缝集成 Next.js, Express, Fastify 等主流框架。
+- 📦 **双模块支持** - 完美兼容 **ESM** 和 **CommonJS**。
 
 ## 📸 截图
 
 ### Web GUI 界面
 ![Web GUI](https://via.placeholder.com/800x450?text=Web+GUI+Screenshot)
 
-### Chrome DevTools 集成
-![Chrome DevTools](https://via.placeholder.com/800x450?text=Chrome+DevTools+Screenshot)
-
 ## 🚀 快速开始
 
-### 安装
+### 1. 安装
 
 ```bash
-npm install @mt0926/node-network-devtools puppeteer
+npm install @mt0926/node-network-devtools
 # 或
-pnpm add @mt0926/node-network-devtools puppeteer
-# 或
-yarn add @mt0926/node-network-devtools puppeteer
+pnpm add @mt0926/node-network-devtools
 ```
 
-**注意**：Puppeteer 是 GUI 浏览器窗口所必需的。如果未安装，您会看到友好的错误消息和安装指引。
+> **注意**: 无需安装 Puppeteer 等额外依赖！工具会自动检测并使用系统中已有的浏览器。
 
-### 使用
+### 2. 使用方式 (推荐)
 
-#### 方式一：使用 `-r` 或 `--import` (推荐)
+在应用入口文件的最顶部调用 `install()`。
+
+**ESM:**
+```typescript
+import { install } from '@mt0926/node-network-devtools';
+
+await install(); // 确保在发送任何网络请求的 import 之前调用
+```
+
+**CommonJS:**
+```javascript
+const { install } = require('@mt0926/node-network-devtools');
+
+(async () => {
+  await install();
+})();
+```
+
+### 3. 高级方案：零代码注入
+
+如果你不想修改源代码，可以使用 Node.js 的命令行参数来注入工具。
 
 **ESM:**
 ```bash
@@ -86,54 +83,18 @@ node --import @mt0926/node-network-devtools/register your-script.js
 node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
-#### 方式二：编程方式
-
-```typescript
-import { install } from '@mt0926/node-network-devtools';
-
-await install();
-
-// 你的应用代码
-import express from 'express';
-const app = express();
-// ...
-```
-
-### 查看请求
-
-启动应用后：
-
-- **Web GUI**（默认）：极简浏览器窗口会自动打开显示 GUI
-  - 紧凑的窗口大小（默认 800x600）
-  - 可自定义窗口大小和标题
-  - 无浏览器工具栏或地址栏（app 模式）
-
-要手动访问 GUI，请查看控制台输出中的 URL：
-```
-🚀 Node Network DevTools GUI started at http://localhost:9229
-```
-
 ## 🖥️ Web GUI
 
-内置的 Web GUI 提供类似 Chrome DevTools 的网络请求监控体验。
+启动后，一个极简的浏览器窗口会自动打开并显示实时请求列表。
 
-### 极简浏览器窗口
+- **紧凑尺寸** (800x600)，方便分屏调试。
+- **搜索与过滤** - 按 URL、方法或状态码筛选。
+- **详情面板** - 查看 Header、Payload 和 Response。
+- **深色/浅色模式**支持。
 
-GUI 在极简的 Puppeteer 控制的浏览器窗口中打开：
+如果需要手动访问，请在控制台输出中查找 URL：
+`🚀 Node Network DevTools GUI started at http://localhost:9229`
 
-- **紧凑尺寸**：默认 800x600，可通过环境变量自定义
-- **App 模式**：无浏览器工具栏、地址栏或其他界面元素
-- **自定义标题**：默认显示 "Node Network DevTools"
-- **快速启动**：3 秒内打开
-
-### 功能特性
-
-- 📋 **请求列表** - 实时显示所有网络请求
-- 🔍 **搜索过滤** - 按 URL、方法、状态码和类型过滤
-- 📝 **详情面板** - 查看请求头、请求体、响应和时序信息
-- 🎨 **主题切换** - 支持深色/浅色主题
-- ⏸️ **暂停/恢复** - 暂停请求捕获以便分析
-- 🔄 **实时更新** - 基于 WebSocket 的实时更新
 
 ### GUI 配置
 
@@ -327,7 +288,7 @@ const requests = store.getByTraceId('user-login');
 2. **Undici 拦截**：使用 `Agent.compose()` 注册拦截器捕获 fetch 请求
 3. **上下文传递**：使用 `AsyncLocalStorage` 在异步调用链中传递 TraceID
 4. **事件桥接**：将拦截的请求转发到 WebSocket 客户端以实现 GUI 实时更新
-5. **极简浏览器**：使用 Puppeteer 在 app 模式下启动紧凑的浏览器窗口
+5. **原生浏览器启动**：自动检测并启动系统中的浏览器 (Chrome/Edge/Chromium)，并以专用的 App 模式窗口运行。
 
 ## 🤝 贡献
 
@@ -365,7 +326,7 @@ MIT © [ddddd](https://github.com/dong0926)
 
 - 🐛 [报告问题](https://github.com/dong0926/node-network-devtools/issues)
 - 💬 [讨论](https://github.com/dong0926/node-network-devtools/discussions)
-- 📧 邮箱：your.email@example.com
+- 📧 邮箱：xx630133368@gmail.com
 
 ---
 

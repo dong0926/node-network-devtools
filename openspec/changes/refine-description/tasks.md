@@ -1,0 +1,4 @@
+- [x] Refine project description (Intro & Features) in `README.md` <!-- id: 0 -->
+- [x] Refine usage instructions in `README.md` to be more direct and simpler <!-- id: 1 -->
+- [x] Refine project description (Intro & Features) in `README.zh-CN.md` <!-- id: 2 -->
+- [x] Refine usage instructions in `README.zh-CN.md` to be more direct and simpler <!-- id: 3 -->

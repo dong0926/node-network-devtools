@@ -44,7 +44,6 @@ node-network-devtools/
 │   ├── gui/                # GUI server and WebSocket
 │   ├── store/              # Request storage
 │   ├── context/            # Context management
-│   ├── cdp/                # Chrome DevTools Protocol bridge
 │   └── adapters/           # Framework adapters (Next.js, etc.)
 ├── packages/gui/           # Web GUI frontend
 ├── examples/               # Usage examples

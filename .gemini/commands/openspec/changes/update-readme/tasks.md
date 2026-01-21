@@ -1,0 +1,2 @@
+- [ ] Update `README.md` with CI and Codecov badges <!-- id: 0 -->
+- [ ] Update `README.zh-CN.md` with CI and Codecov badges <!-- id: 1 -->

@@ -62,7 +62,6 @@ node-network-devtools/
 │   ├── adapters/               # 框架适配器
 │   │   ├── axios.ts           # Axios 适配器
 │   │   └── nextjs.ts          # Next.js 适配器
-│   ├── cdp/                    # Chrome DevTools Protocol
 │   ├── context/                # 上下文管理
 │   │   └── context-manager.ts # 请求追踪
 │   ├── gui/                    # GUI 服务器
@@ -142,7 +141,6 @@ node-network-devtools/
 | 目录 | 说明 |
 |------|------|
 | `adapters/` | 框架特定的适配器（Next.js、Axios 等） |
-| `cdp/` | Chrome DevTools Protocol 集成 |
 | `context/` | 基于 AsyncLocalStorage 的请求追踪 |
 | `gui/` | GUI 服务器相关模块 |
 | `interceptors/` | HTTP/Undici 请求拦截器 |

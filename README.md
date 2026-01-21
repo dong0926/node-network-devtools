@@ -2,9 +2,12 @@
 
 # 🔍 Node Network DevTools
 
-**Monitor Node.js network requests with Chrome DevTools integration and built-in Web GUI**
+**A powerful, zero-config network debugging companion for Node.js.**  
+*Monitor all outgoing HTTP, HTTPS, and Fetch/Undici requests in a sleek, real-time Web GUI that feels just like Chrome DevTools.*
 
-[![npm version](https://img.shields.io/npm/v/node-network-devtools.svg)](https://www.npmjs.com/package/@mt0926/node-network-devtools)
+[![npm version](https://img.shields.io/npm/v/@mt0926/node-network-devtools.svg)](https://www.npmjs.com/package/@mt0926/node-network-devtools)
+[![CI](https://github.com/dong0926/node-network-devtools/actions/workflows/ci.yml/badge.svg)](https://github.com/dong0926/node-network-devtools/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/dong0926/node-network-devtools/branch/master/graph/badge.svg)](https://codecov.io/gh/dong0926/node-network-devtools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/node-network-devtools.svg)](https://nodejs.org)
 
@@ -14,69 +17,61 @@
 
 ---
 
-## ⚠️ Development Tool Only
+## 🚀 Why Node Network DevTools?
 
-**This tool is designed for development environments only. Do NOT use in production!**
-
-- Uses Puppeteer to launch a minimal browser window for the GUI
-- Intercepts all network requests which may impact performance
-- Stores request/response data in memory
-- Not suitable for production workloads
-
-### Disabling in Production
-
-```javascript
-// Conditional installation
-if (process.env.NODE_ENV === 'development') {
-  await install();
-}
-```
-
-Or use environment variables:
-
-```bash
-# Disable GUI and auto-open
-NND_GUI_ENABLED=false NND_AUTO_OPEN=false node your-app.js
-```
+Tired of `console.log`ing every request and response? **Node Network DevTools** brings the familiarity of the browser's "Network" tab to your Node.js backend. Whether you're debugging external API calls, microservices, or Next.js server actions, you can now inspect every detail in real-time.
 
 ## ✨ Features
 
-- 🔍 **Dual Interception** - Supports both `http/https` modules and `undici/fetch` API
-- 🎯 **Zero Intrusion** - Auto-inject via `-r` or `--import`, no code changes needed
-- 🖥️ **Minimal Browser Window** - Puppeteer-powered compact GUI window (800x600)
-- 📊 **Built-in Web GUI** - Chrome DevTools-like interface with real-time updates
-- 🔗 **Request Tracing** - AsyncLocalStorage-based request correlation
-- 🛡️ **Security** - Auto-redact sensitive headers (Authorization, Cookie, etc.)
-- ⚡ **Next.js Compatible** - Preserves `next.revalidate`, `next.tags` options
-- 📦 **TypeScript** - Full TypeScript support with type definitions
+- 💎 **DevTools-like Experience** - A familiar, responsive Web GUI for inspecting headers, payloads, and responses.
+- 🔌 **Universal Interception** - Native support for `http/https` modules and modern `fetch/undici` (Node.js 18+).
+- 🛠️ **Zero Code Intrusion** - Plug it into your project with a single line of code or a simple CLI flag.
+- 🖥️ **Minimal Browser Window** - Automatically launches a compact, app-mode GUI window (using your system's Chrome, Edge, or Chromium).
+- 🔗 **Smart Request Tracing** - Automatically correlate related requests in a single business flow using `AsyncLocalStorage`.
+- 🛡️ **Built-in Redaction** - Keeps your secrets safe by auto-redacting sensitive headers like `Authorization` and `Cookie`.
+- ⚡ **Framework Ready** - Seamless integration with Next.js, Express, Fastify, and more.
+- 📦 **Dual Module Support** - Works out of the box with both **ESM** and **CommonJS**.
 
 ## 📸 Screenshots
 
 ### Web GUI Interface
 ![Web GUI](https://via.placeholder.com/800x450?text=Web+GUI+Screenshot)
 
-### Chrome DevTools Integration
-![Chrome DevTools](https://via.placeholder.com/800x450?text=Chrome+DevTools+Screenshot)
-
 ## 🚀 Quick Start
 
-### Installation
+### 1. Installation
 
 ```bash
-npm install @mt0926/node-network-devtools puppeteer
+npm install @mt0926/node-network-devtools
 # or
-pnpm add @mt0926/node-network-devtools puppeteer
-# or
-yarn add @mt0926/node-network-devtools puppeteer
+pnpm add @mt0926/node-network-devtools
 ```
 
-**Note**: 
-- Puppeteer is required for the GUI browser window. If not installed, you'll see a friendly error message with installation instructions.
-- This package supports both **ESM** and **CommonJS** module systems. See [Module System Support](#module-system-support) for details.
+> **Note**: No extra dependencies like Puppeteer are required! It uses your system's existing browser.
 
-### Usage
+### 2. Usage (Recommended)
 
-#### Method 1: Using `-r` or `--import` (Recommended)
+Just call `install()` at the very beginning of your application entry point.
+
+**ESM:**
+```typescript
+import { install } from '@mt0926/node-network-devtools';
+
+await install(); // Call before any other imports that make network requests
+```
+
+**CommonJS:**
+```javascript
+const { install } = require('@mt0926/node-network-devtools');
+
+(async () => {
+  await install();
+})();
+```
+
+### 3. Advanced: Zero-Code Injection
+
+If you don't want to modify your source code, you can use Node.js CLI arguments to inject the tool.
 
 **ESM:**
 ```bash
@@ -88,69 +83,17 @@ node --import @mt0926/node-network-devtools/register your-script.js
 node -r @mt0926/node-network-devtools/register your-script.js
 ```
 
-#### Method 2: Programmatic
-
-**ESM:**
-```typescript
-import { install } from '@mt0926/node-network-devtools';
-
-await install();
-
-// Your application code
-import express from 'express';
-const app = express();
-// ...
-```
-
-**CommonJS:**
-```javascript
-const { install } = require('@mt0926/node-network-devtools');
-
-(async () => {
-  await install();
-
-  // Your application code
-  const express = require('express');
-  const app = express();
-  // ...
-})();
-```
-
-### Viewing Requests
-
-After starting your application:
-
-- **Web GUI** (Default): A minimal browser window will automatically open showing the GUI
-  - Compact window size (800x600 by default)
-  - Customizable window size and title
-  - No browser chrome or toolbars (app mode)
-
-To manually access the GUI, look for the URL in the console output:
-```
-🚀 Node Network DevTools GUI started at http://localhost:9229
-```
-
 ## 🖥️ Web GUI
 
-The built-in Web GUI provides a Chrome DevTools-like experience for monitoring network requests.
+Once started, a minimal browser window will automatically open showing the real-time request list.
 
-### Minimal Browser Window
+- **Compact size** (800x600) for side-by-side debugging.
+- **Search & Filter** by URL, method, or status.
+- **Details Panel** for headers, payload, and response.
+- **Dark/Light** theme support.
 
-The GUI opens in a minimal Puppeteer-controlled browser window:
-
-- **Compact Size**: Default 800x600, customizable via environment variables
-- **App Mode**: No browser chrome, toolbars, or address bar
-- **Custom Title**: Shows "Node Network DevTools" by default
-- **Fast Launch**: Opens in under 3 seconds
-
-### Features
-
-- 📋 **Request List** - Real-time display of all network requests
-- 🔍 **Search & Filter** - Filter by URL, method, status code, and type
-- 📝 **Details Panel** - View headers, payload, response, and timing
-- 🎨 **Theme Toggle** - Dark/Light theme support
-- ⏸️ **Pause/Resume** - Pause request capture for analysis
-- 🔄 **Real-time Updates** - WebSocket-based live updates
+If you need to access it manually, check the console output for the URL:
+`🚀 Node Network DevTools GUI started at http://localhost:9229`
 
 ### GUI Configuration
 
@@ -416,7 +359,7 @@ Check the [examples](./examples) directory for more usage examples:
 2. **Undici Interception**: Uses `Agent.compose()` to register interceptors for fetch requests
 3. **Context Propagation**: Uses `AsyncLocalStorage` to pass TraceID through async call chains
 4. **Event Bridge**: Forwards intercepted requests to WebSocket clients for real-time GUI updates
-5. **Minimal Browser**: Uses Puppeteer to launch a compact browser window in app mode
+5. **Native Browser Launch**: Detects and launches your system's browser (Chrome/Edge/Chromium) in a dedicated app-mode window.
 
 ## 🤝 Contributing
 
@@ -454,7 +397,7 @@ MIT © [ddddd](https://github.com/dong0926)
 
 - 🐛 [Report Issues](https://github.com/dong0926/node-network-devtools/issues)
 - 💬 [Discussions](https://github.com/dong0926/node-network-devtools/discussions)
-- 📧 Email: your.email@example.com
+- 📧 Email: xx630133368@gmail.com
 
 ---
 

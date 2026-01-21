@@ -1,7 +1,7 @@
 /**
  * Node Network DevTools
  * 
- * Node.js 网络请求监听工具，桥接到 Chrome DevTools Network 面板
+ * Node.js 网络请求监听工具，通过 Web GUI 实时监控请求
  */
 
 // 配置模块

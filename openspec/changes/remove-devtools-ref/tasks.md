@@ -1,0 +1,5 @@
+- [x] Remove Chrome DevTools section and references from `README.md` <!-- id: 0 -->
+- [x] Remove Chrome DevTools section and references from `README.zh-CN.md` <!-- id: 1 -->
+- [x] Update project description in `package.json` <!-- id: 2 -->
+- [x] Update header comment in `src/index.ts` <!-- id: 3 -->
+- [x] Clean up `docs/PROJECT_STRUCTURE.md` and `CONTRIBUTING.md` <!-- id: 4 -->
