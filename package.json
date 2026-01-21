@@ -1,6 +1,6 @@
 {
   "name": "@mt0926/node-network-devtools",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "🔍 Node.js network request monitoring tool with built-in Web GUI",
   "type": "module",
   "main": "./dist/cjs/index.js",
