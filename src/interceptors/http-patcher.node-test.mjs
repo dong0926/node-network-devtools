@@ -15,46 +15,55 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const http = require('node:http');
 
-// 导入 TypeScript 模块或编译后的模块
-const useDist = process.env.TEST_FROM_DIST === 'true';
-const baseDir = useDist ? '../../dist/esm' : '.';
-const ext = useDist ? '.js' : '.ts';
-
-const { HttpPatcher } = await import(`${baseDir}/interceptors/http-patcher${ext}`);
-const { getRequestStore, resetRequestStore } = await import(`${baseDir}/store/ring-buffer${ext}`);
-const { resetConfig } = await import(`${baseDir}/config${ext}`);
+// 导入 TypeScript 模块
+const { HttpPatcher } = await import('./http-patcher.ts');
+const { getRequestStore, resetRequestStore } = await import('../store/ring-buffer.ts');
+const { resetConfig } = await import('../config.ts');
 
 // 测试服务器
 let server;
 let serverPort;
 
 before(async () => {
-  // 创建测试服务器
-  server = http.createServer((req, res) => {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
-      const response = JSON.stringify({
-        method: req.method,
-        url: req.url,
-        headers: req.headers,
-        body,
+  try {
+    console.error('[Test Debug] 开始创建测试服务器...');
+    // 创建测试服务器
+    server = http.createServer((req, res) => {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        const response = JSON.stringify({
+          method: req.method,
+          url: req.url,
+          headers: req.headers,
+          body,
+        });
+        
+        res.writeHead(200, { 
+          'Content-Type': 'application/json',
+          'X-Custom-Header': 'test-value'
+        });
+        res.end(response);
       });
-      
-      res.writeHead(200, { 
-        'Content-Type': 'application/json',
-        'X-Custom-Header': 'test-value'
-      });
-      res.end(response);
     });
-  });
 
-  await new Promise((resolve) => {
-    server.listen(0, () => {
-      serverPort = server.address().port;
-      resolve();
+    server.on('error', (err) => {
+      console.error('[Test Debug] 服务器错误事件:', err.message, err.stack);
     });
-  });
+
+    await new Promise((resolve, reject) => {
+      server.listen(0, '127.0.0.1', () => {
+        serverPort = server.address().port;
+        console.error(`[Test Debug] 服务器启动在 127.0.0.1:${serverPort}`);
+        resolve();
+      });
+      server.once('error', reject);
+    });
+  } catch (err) {
+    console.error('[Test Debug] Before 钩子发生致命错误:', err.message);
+    console.error(JSON.stringify({ name: err.name, message: err.message, stack: err.stack }));
+    throw err;
+  }
 });
 
 after(async () => {
