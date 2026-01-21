@@ -15,10 +15,14 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const http = require('node:http');
 
-// 导入 TypeScript 模块
-const { HttpPatcher } = await import('./http-patcher.ts');
-const { getRequestStore, resetRequestStore } = await import('../store/ring-buffer.ts');
-const { resetConfig } = await import('../config.ts');
+// 导入 TypeScript 模块或编译后的模块
+const useDist = process.env.TEST_FROM_DIST === 'true';
+const baseDir = useDist ? '../../dist/esm' : '.';
+const ext = useDist ? '.js' : '.ts';
+
+const { HttpPatcher } = await import(`${baseDir}/interceptors/http-patcher${ext}`);
+const { getRequestStore, resetRequestStore } = await import(`${baseDir}/store/ring-buffer${ext}`);
+const { resetConfig } = await import(`${baseDir}/config${ext}`);
 
 // 测试服务器
 let server;

@@ -1,6 +1,6 @@
 {
   "name": "@mt0926/node-network-devtools",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "🔍 Node.js network request monitoring tool with built-in Web GUI",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -44,7 +44,8 @@
     "test": "vitest run",
     "test:http": "tsx --test src/interceptors/http-patcher.node-test.mjs",
     "test:undici": "tsx --test src/interceptors/undici-patcher.node-test.mjs",
-    "test:all": "pnpm test && pnpm test:http && pnpm test:undici",
+    "test:dist": "node scripts/run-dist-tests.js",
+    "test:all": "pnpm test && pnpm test:dist",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "clean": "rimraf dist",
