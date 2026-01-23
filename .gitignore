@@ -3,6 +3,7 @@ node_modules/
 
 .gemini-clipboard
 .kiro/
+.claude/
 
 TODO-BEFORE-PUBLISH.md
 

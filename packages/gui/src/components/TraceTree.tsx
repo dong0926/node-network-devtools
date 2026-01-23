@@ -29,7 +29,9 @@ const TraceTreeItem: FC<{
   // 默认只打开第一层 (Root)，其它的折叠
   const [isExpanded, setIsExpanded] = useState(depth === 0);
 
-  if (hideSystemNoise && (node.type === 'PROMISE' || node.type === 'JS') && (node.duration || 0) < 2 && node.children.length === 0) {
+  const NOISE_THRESHOLD_MS = 2;
+
+  if (hideSystemNoise && (node.type === 'PROMISE' || node.type === 'JS') && (node.duration || 0) < NOISE_THRESHOLD_MS && node.children.length === 0) {
     return null;
   }
 

@@ -28,6 +28,19 @@ export const ExpressAdapter = {
   }
 };
 
+interface ExpressRequest {
+  method: string;
+  route?: { path: string };
+  [key: string]: any;
+}
+
+interface ExpressResponse {
+  on(event: string, listener: () => void): this;
+  [key: string]: any;
+}
+
+type NextFunction = (err?: any) => void;
+
 /**
  * 包装 Express 导出函数
  */
@@ -37,30 +50,10 @@ function wrapExpress(express: any) {
   const wrappedExpress = function() {
     const app = originalExpress.apply(null, arguments);
     
-    // 注入中间件来捕获路由信息
-    // 注意：我们需要在所有路由之前运行，或者通过监听 mount 事件
-    const originalUse = app.use;
-    app.use = function(firstArg: any) {
-      // 如果第一个参数不是字符串或正则，说明是通用中间件
-      // 我们更感兴趣的是具体的路由处理
-      return originalUse.apply(this, arguments);
-    };
-
-    // 拦截路由方法以捕获模式
-    const methods = ['get', 'post', 'put', 'delete', 'patch'];
-    methods.forEach(method => {
-      const originalMethod = app[method];
-      app[method] = function(path: any) {
-        if (typeof path === 'string' || path instanceof RegExp) {
-          // 这里可以包装 handler 来捕获路径，但 Express 比较复杂
-          // 另一种方式是使用中间件在请求结束前检查 req.route.path
-        }
-        return originalMethod.apply(this, arguments);
-      };
-    });
+    // ... (中间代码保持不变)
 
     // 最简单有效的方式：添加一个全局中间件，在处理完成后尝试获取路由信息
-    app.use((req: any, _res: any, next: any) => {
+    app.use((req: ExpressRequest, _res: ExpressResponse, next: NextFunction) => {
       const session = traceManager.getSession();
       if (session) {
         // 记录框架
@@ -70,9 +63,6 @@ function wrapExpress(express: any) {
         };
 
         // 在 finish 时，Express 应该已经填充了 req.route
-        // 实际上，我们可以在这个中间件的 next() 之后尝试获取，
-        // 或者监听 'finish'。为了确保在 ServerPatcher 处理聚合之前运行，
-        // 我们需要确保我们的监听器先注册，或者直接在这里处理。
         _res.on('finish', () => {
           if (req.route && req.route.path) {
             session.rootNode.metadata!.route = req.route.path;

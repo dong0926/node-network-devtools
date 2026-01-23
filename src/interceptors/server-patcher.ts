@@ -128,14 +128,14 @@ export const ServerPatcher = {
         });
 
         const handleFinish = () => {
-          session.rootNode.endTime = Date.now();
-          session.rootNode.duration = session.rootNode.endTime - session.rootNode.startTime;
-
-          // 聚合与降噪
-          const aggregatedTrace = TraceAggregator.aggregate(session);
-          
-          // 发送到前端
           try {
+            session.rootNode.endTime = Date.now();
+            session.rootNode.duration = session.rootNode.endTime - session.rootNode.startTime;
+
+            // 聚合与降噪
+            const aggregatedTrace = TraceAggregator.aggregate(session);
+            
+            // 发送到前端
             const eventBridge = getEventBridge();
             if (eventBridge.isRunning()) {
               eventBridge.emitServerTrace({
@@ -144,7 +144,7 @@ export const ServerPatcher = {
               });
             }
           } catch (e) {
-            // Ignore
+            console.error('[server-trace] Failed to finalize trace:', e);
           }
         };
 

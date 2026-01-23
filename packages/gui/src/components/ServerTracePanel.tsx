@@ -11,6 +11,9 @@ const ServerTracePanel: FC<ServerTracePanelProps> = ({ trace }) => {
   const [hideSystemNoise, setHideSystemNoise] = useState(true);
   const [viewMode, setViewMode] = useState<'tree' | 'flame'>('tree');
 
+  // 降噪阈值 (毫秒)
+  const NOISE_THRESHOLD_MS = 2;
+
   // 深度优先遍历计算节点的层级和显示 (用于火焰图)
   const flattenedNodes = useMemo(() => {
     const nodes: { node: TraceNode; depth: number; left: number; width: number }[] = [];
@@ -18,7 +21,7 @@ const ServerTracePanel: FC<ServerTracePanelProps> = ({ trace }) => {
     const rootDuration = trace.duration || 1; 
 
     function walk(node: TraceNode, depth: number) {
-      if (hideSystemNoise && (node.type === 'PROMISE' || node.type === 'JS') && (node.duration || 0) < 2) {
+      if (hideSystemNoise && (node.type === 'PROMISE' || node.type === 'JS') && (node.duration || 0) < NOISE_THRESHOLD_MS) {
         return;
       }
 
