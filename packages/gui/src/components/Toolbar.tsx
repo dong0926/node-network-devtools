@@ -10,6 +10,10 @@ import { HTTP_METHODS, STATUS_CODE_GROUPS, REQUEST_TYPES } from '../hooks';
 import type { FilterState } from '../hooks';
 
 interface ToolbarProps {
+  /** 当前视图 */
+  view: 'network' | 'traces';
+  /** 切换视图回调 */
+  onViewChange: (view: 'network' | 'traces') => void;
   /** 过滤器状态 */
   filters: FilterState;
   /** 设置搜索关键词 */
@@ -145,6 +149,8 @@ function FilterDropdown({
  * 工具栏组件
  */
 export function Toolbar({
+  view,
+  onViewChange,
   filters,
   onSearchChange,
   onToggleMethod,
@@ -158,6 +164,33 @@ export function Toolbar({
 }: ToolbarProps) {
   return (
     <div className="h-8 flex items-center px-2 gap-1 sm:gap-2 border-b border-devtools-border bg-devtools-bg overflow-x-auto">
+      {/* 视图切换 */}
+      <div className="flex bg-devtools-bg-secondary rounded p-0.5 shrink-0">
+        <button
+          className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+            view === 'network' 
+              ? 'bg-devtools-accent text-devtools-bg' 
+              : 'text-devtools-text-secondary hover:text-devtools-text'
+          }`}
+          onClick={() => onViewChange('network')}
+        >
+          NETWORK
+        </button>
+        <button
+          className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+            view === 'traces' 
+              ? 'bg-devtools-accent text-devtools-bg' 
+              : 'text-devtools-text-secondary hover:text-devtools-text'
+          }`}
+          onClick={() => onViewChange('traces')}
+        >
+          TRACES
+        </button>
+      </div>
+
+      {/* 分隔符 */}
+      <div className="w-px h-4 bg-devtools-border shrink-0" />
+
       {/* 版本号 */}
       <div className="flex items-center h-6 px-2 text-[10px] font-bold bg-devtools-bg-secondary text-devtools-text-secondary rounded select-none shrink-0" title={`v${__APP_VERSION__}`}>
         v{__APP_VERSION__}

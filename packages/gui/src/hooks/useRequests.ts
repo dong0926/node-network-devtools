@@ -112,6 +112,22 @@ interface InitialRequestPayload {
 }
 
 /**
+ * 追踪节点
+ */
+export interface TraceNode {
+  id: number;
+  parentId?: number;
+  name: string;
+  type: string;
+  startTime: number;
+  endTime?: number;
+  duration?: number;
+  metadata?: Record<string, any>;
+  stack?: string;
+  children: TraceNode[];
+}
+
+/**
  * 从 URL 推断请求类型
  */
 function inferRequestType(url: string): string {
@@ -158,6 +174,8 @@ interface UseRequestsReturn {
   requests: UIRequest[];
   /** 请求 Map（用于快速查找） */
   requestsMap: Map<string, UIRequest>;
+  /** 服务端追踪数据 */
+  serverTraces: Map<string, TraceNode>;
   /** 选中的请求 ID */
   selectedId: string | null;
   /** 选中的请求 */
@@ -179,7 +197,19 @@ interface UseRequestsReturn {
  */
 export function useRequests(): UseRequestsReturn {
   const [requestsMap, setRequestsMap] = useState<Map<string, UIRequest>>(new Map());
+  const [serverTraces, setServerTraces] = useState<Map<string, TraceNode>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  /**
+   * 处理服务端追踪
+   */
+  const handleServerTrace = useCallback((payload: any) => {
+    setServerTraces(prev => {
+      const next = new Map(prev);
+      next.set(payload.requestId, payload);
+      return next;
+    });
+  }, []);
 
   /**
    * 处理请求开始
@@ -308,21 +338,26 @@ export function useRequests(): UseRequestsReturn {
       case 'request:error':
         handleRequestError(message.payload as RequestErrorPayload);
         break;
+      case 'server:trace':
+        handleServerTrace(message.payload);
+        break;
       case 'requests:initial':
         handleInitialData(message.payload as InitialRequestPayload[]);
         break;
       case 'requests:clear':
         setRequestsMap(new Map());
+        setServerTraces(new Map());
         setSelectedId(null);
         break;
     }
-  }, [handleRequestStart, handleRequestComplete, handleRequestError, handleInitialData]);
+  }, [handleRequestStart, handleRequestComplete, handleRequestError, handleInitialData, handleServerTrace]);
 
   /**
    * 清空请求
    */
   const clearRequests = useCallback(() => {
     setRequestsMap(new Map());
+    setServerTraces(new Map());
     setSelectedId(null);
   }, []);
 
@@ -352,6 +387,7 @@ export function useRequests(): UseRequestsReturn {
   return {
     requests,
     requestsMap,
+    serverTraces,
     selectedId,
     selectedRequest,
     selectRequest,

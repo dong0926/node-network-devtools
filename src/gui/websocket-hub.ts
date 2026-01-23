@@ -15,6 +15,7 @@ export type WSMessageType =
   | 'request:start'      // 请求开始
   | 'request:complete'   // 请求完成
   | 'request:error'      // 请求错误
+  | 'server:trace'       // 服务端全链路追踪
   | 'requests:initial'   // 初始数据
   | 'requests:clear'     // 清空请求
   | 'control:pause'      // 暂停
@@ -384,6 +385,17 @@ export function createInitialDataMessage(requests: RequestData[]): WSMessage {
       error: req.error,
       timing: req.timing,
     })),
+    timestamp: Date.now(),
+  };
+}
+
+/**
+ * 创建服务端全链路追踪消息
+ */
+export function createServerTraceMessage(traceData: any): WSMessage {
+  return {
+    type: 'server:trace',
+    payload: traceData,
     timestamp: Date.now(),
   };
 }

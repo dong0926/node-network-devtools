@@ -10,6 +10,7 @@
 import { getConfig } from './config.js';
 import { HttpPatcher } from './interceptors/http-patcher.js';
 import { UndiciPatcher } from './interceptors/undici-patcher.js';
+import { ServerPatcher } from './interceptors/server-patcher.js';
 import { getRequestStore } from './store/ring-buffer.js';
 import { getGUIServer } from './gui/server.js';
 import { getEventBridge } from './gui/event-bridge.js';
@@ -52,6 +53,16 @@ async function initialize(): Promise<void> {
       info('Undici/Fetch 拦截器已安装');
     } catch (error) {
       warn(`Undici 拦截器安装失败: ${error}`);
+    }
+  }
+
+  // 安装 Server Trace 拦截器
+  if (config.traceEnabled) {
+    try {
+      ServerPatcher.install();
+      info('Server Trace 拦截器已安装');
+    } catch (error) {
+      warn(`Server Trace 拦截器安装失败: ${error}`);
     }
   }
 

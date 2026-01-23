@@ -4,42 +4,53 @@
  * 显示选中请求的详细信息，包含标签页切换
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HeadersTab } from './HeadersTab';
 import { PayloadTab } from './PayloadTab';
 import { ResponseTab } from './ResponseTab';
 import { TimingTab } from './TimingTab';
+import ServerTracePanel from './ServerTracePanel';
 import { Resizer } from './Resizer';
 import { useResizablePanel } from '../hooks/useResizablePanel';
-import type { UIRequest } from '../hooks';
+import type { UIRequest, TraceNode } from '../hooks';
 
 interface DetailPanelProps {
   /** 选中的请求 */
   request: UIRequest;
+  /** 追踪数据 */
+  trace?: TraceNode;
   /** 初始宽度（可选，像素） */
   initialWidth?: number;
+  /** 初始标签页 */
+  initialTab?: TabType;
 }
 
 /**
  * 标签页类型
  */
-type TabType = 'headers' | 'payload' | 'response' | 'timing';
-
-/**
- * 标签页配置
- */
-const TABS: { id: TabType; label: string }[] = [
-  { id: 'headers', label: 'Headers' },
-  { id: 'payload', label: 'Payload' },
-  { id: 'response', label: 'Response' },
-  { id: 'timing', label: 'Timing' },
-];
+type TabType = 'headers' | 'payload' | 'response' | 'timing' | 'trace';
 
 /**
  * 详情面板组件
  */
-export function DetailPanel({ request, initialWidth }: DetailPanelProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('headers');
+export function DetailPanel({ request, trace, initialWidth, initialTab }: DetailPanelProps) {
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'headers');
+
+  // 当外部强制改变 initialTab 时（比如从不同列表切换），同步状态
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, request.id]);
+
+  // 标签页配置
+  const tabs: { id: TabType; label: string; show: boolean }[] = [
+    { id: 'headers', label: 'Headers', show: true },
+    { id: 'payload', label: 'Payload', show: !!request.requestBody },
+    { id: 'response', label: 'Response', show: !!request.responseBody },
+    { id: 'timing', label: 'Timing', show: !!request.timing || !!request.time },
+    { id: 'trace', label: 'Trace', show: !!trace },
+  ];
 
   // 使用可调整大小面板 Hook
   const { width, setWidth, resetWidth, startDragging, stopDragging } = useResizablePanel({
@@ -68,7 +79,7 @@ export function DetailPanel({ request, initialWidth }: DetailPanelProps) {
       <div className="flex-1 flex flex-col min-w-0 h-full border-l border-devtools-border md:border-l-0">
         {/* 标签页导航 */}
         <div className="h-7 flex items-center px-2 border-b border-devtools-border bg-devtools-bg shrink-0 overflow-x-auto">
-          {TABS.map(tab => (
+          {tabs.filter(t => t.show).map(tab => (
             <button
               key={tab.id}
               className={`px-2 sm:px-3 py-1 text-xs whitespace-nowrap ${
@@ -104,6 +115,9 @@ export function DetailPanel({ request, initialWidth }: DetailPanelProps) {
               timing={request.timing}
               totalTime={request.time}
             />
+          )}
+          {activeTab === 'trace' && trace && (
+            <ServerTracePanel trace={trace} />
           )}
         </div>
 

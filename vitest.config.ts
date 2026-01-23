@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     // 在测试前运行设置文件
     setupFiles: ['./src/test-setup.ts'],
     // 禁用隔离以确保模块共享
