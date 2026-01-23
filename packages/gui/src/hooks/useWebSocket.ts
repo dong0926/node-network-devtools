@@ -13,6 +13,7 @@ export type WSMessageType =
   | 'request:start'
   | 'request:complete'
   | 'request:error'
+  | 'server:trace'
   | 'requests:initial'
   | 'requests:clear'
   | 'control:pause'

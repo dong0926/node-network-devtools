@@ -170,7 +170,7 @@ export function Resizer({
 
   return (
     <div
-      className="w-1 cursor-col-resize hover:bg-devtools-border-hover bg-devtools-border transition-colors flex-shrink-0"
+      className="relative w-[1px] h-full cursor-col-resize hover:bg-devtools-accent bg-devtools-border transition-colors flex-shrink-0 group"
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
@@ -182,6 +182,12 @@ export function Resizer({
       aria-valuemin={minWidth}
       aria-valuemax={maxWidth ?? window.innerWidth * 0.8}
       title="拖拽调整宽度，双击或按 Enter 重置，使用左右箭头键微调"
-    />
+    >
+      {/* 扩大的点击区域：左右各扩展 4px */}
+      <div className="absolute inset-y-0 -left-[4px] -right-[4px] z-10" />
+      
+      {/* 悬停时的视觉指示器 */}
+      <div className="absolute inset-y-0 -left-[0.5px] -right-[0.5px] bg-devtools-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+    </div>
   );
 }

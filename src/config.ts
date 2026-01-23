@@ -51,6 +51,18 @@ export interface Config {
   guiHost: string;
   /** 是否自动打开浏览器，默认 true */
   autoOpen: boolean;
+
+  // Server Trace 配置
+  /** 是否开启服务端全链路追踪，默认 false */
+  traceEnabled: boolean;
+  /** 每请求最大节点数，默认 5000 */
+  traceMaxNodes: number;
+  /** 捕获阈值（毫秒），低于此值的节点可能被折叠，默认 2ms */
+  traceThresholdMs: number;
+  /** 界面降噪显示阈值（毫秒），默认 2ms */
+  traceNoiseThresholdMs: number;
+  /** 忽略追踪的模块名或路径 */
+  traceIgnoredModules: string[];
   
   // 浏览器窗口配置
   /** 浏览器窗口大小，默认 { width: 800, height: 600 } */
@@ -78,6 +90,12 @@ const defaultConfig: Config = {
   wsPort: 'auto',
   guiHost: '127.0.0.1',
   autoOpen: true,
+  // Server Trace 默认配置
+  traceEnabled: false,
+  traceMaxNodes: 5000,
+  traceThresholdMs: 2,
+  traceNoiseThresholdMs: 2,
+  traceIgnoredModules: ['node_modules', 'node:'],
   // 浏览器窗口默认配置
   browserWindowSize: {
     width: 800,
@@ -149,6 +167,12 @@ function loadFromEnv(): Partial<Config> {
     wsPort: parseEnvPort(env.NND_WS_PORT, defaultConfig.wsPort),
     guiHost: env.NND_GUI_HOST || defaultConfig.guiHost,
     autoOpen: parseEnvBoolean(env.NND_AUTO_OPEN, defaultConfig.autoOpen),
+    // Server Trace
+    traceEnabled: parseEnvBoolean(env.NND_TRACE_ENABLED, defaultConfig.traceEnabled),
+    traceMaxNodes: parseEnvNumber(env.NND_TRACE_MAX_NODES, defaultConfig.traceMaxNodes),
+    traceThresholdMs: parseEnvNumber(env.NND_TRACE_THRESHOLD_MS, defaultConfig.traceThresholdMs),
+    traceNoiseThresholdMs: parseEnvNumber(env.NND_TRACE_NOISE_THRESHOLD_MS, defaultConfig.traceNoiseThresholdMs),
+    traceIgnoredModules: parseEnvStringArray(env.NND_TRACE_IGNORED_MODULES, defaultConfig.traceIgnoredModules),
     // 浏览器窗口配置
     browserWindowSize: {
       width: parseEnvNumber(env.NND_BROWSER_WIDTH, defaultConfig.browserWindowSize?.width ?? 800),

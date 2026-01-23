@@ -24,6 +24,7 @@ Tired of `console.log`ing every request and response? **Node Network DevTools** 
 - 🔌 **Universal Interception** - Native support for `http/https` modules and modern `fetch/undici` (Node.js 18+).
 - 🛠️ **Zero Code Intrusion** - Plug it into your project with a single line of code or a simple CLI flag.
 - 🖥️ **Minimal Browser Window** - Automatically launches a compact, app-mode GUI window (using your system's Chrome, Edge, or Chromium).
+- 🔍 **Server-side Tracing (New!)** - Visualize the internal execution flow (Async call tree/Flame Graph) of your Node.js server.
 - 🔗 **Smart Request Tracing** - Automatically correlate related requests in a single business flow using `AsyncLocalStorage`.
 - 🛡️ **Built-in Redaction** - Keeps your secrets safe by auto-redacting sensitive headers like `Authorization` and `Cookie`.
 - ⚡ **Framework Ready** - Seamless integration with Next.js, Express, Fastify, and more.
@@ -139,6 +140,15 @@ NND_AUTO_OPEN=false node --import @mt0926/node-network-devtools/register your-sc
 | `NND_BROWSER_WIDTH` | Browser window width | 800 |
 | `NND_BROWSER_HEIGHT` | Browser window height | 600 |
 | `NND_BROWSER_TITLE` | Browser window title | Node Network DevTools |
+
+#### Server Trace Settings
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NND_TRACE_ENABLED` | Enable server-side execution tracing | false |
+| `NND_TRACE_MAX_NODES` | Maximum trace nodes per request | 5000 |
+| `NND_TRACE_THRESHOLD_MS` | Auto-folding threshold for async nodes | 2 |
+| `NND_TRACE_IGNORED_MODULES` | Modules to ignore in stack capture | node_modules,node: |
 
 ### Programmatic Configuration
 

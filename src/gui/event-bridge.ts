@@ -12,6 +12,7 @@ import {
   createRequestStartMessage,
   createRequestCompleteMessage,
   createRequestErrorMessage,
+  createServerTraceMessage,
   createInitialDataMessage,
   createClearMessage,
   type IWebSocketHub,
@@ -26,6 +27,7 @@ export interface IEventBridge {
   emitRequestStart(request: RequestData): void;
   emitRequestComplete(requestId: string, response: ResponseData): void;
   emitRequestError(requestId: string, error: ErrorData): void;
+  emitServerTrace(traceData: any): void;
   
   // 控制方法
   pause(): void;
@@ -149,6 +151,21 @@ class EventBridgeImpl implements IEventBridge {
     
     if (this.paused) {
       // 暂停时缓存事件
+      this.pendingEvents.push(message);
+    } else {
+      this.wsHub.broadcast(message);
+    }
+  }
+
+  /**
+   * 发送服务端全链路追踪事件
+   */
+  emitServerTrace(traceData: any): void {
+    if (!this.running) return;
+
+    const message = createServerTraceMessage(traceData);
+
+    if (this.paused) {
       this.pendingEvents.push(message);
     } else {
       this.wsHub.broadcast(message);

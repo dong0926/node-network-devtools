@@ -9,34 +9,66 @@ import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { getConfig } from '../config.js';
 import { getAvailablePort } from './port-utils.js';
 import { getWebSocketHub, type IWebSocketHub } from './websocket-hub.js';
 import { getEventBridge, type IEventBridge } from './event-bridge.js';
+// @ts-ignore - 资产文件由脚本生成
+import { assets } from './assets.gen.js';
 
 // 获取当前模块目录
-// 在 CommonJS 中，__dirname 是全局可用的
-// 在 ESM 中，需要使用 import.meta.url
-// 为了避免在 CJS 构建中出现 import.meta 引用，我们使用 eval 来延迟求值
 let currentDirname: string;
-
-// @ts-ignore - __dirname 在 CommonJS 中可用
-if (typeof __dirname !== 'undefined') {
-  // CommonJS 环境
+try {
   // @ts-ignore
-  currentDirname = __dirname;
-} else {
-  // ESM 环境 - 使用 eval 来避免 TypeScript 编译器处理 import.meta
-  try {
-    // eslint-disable-next-line no-eval
-    const importMetaUrl = eval('import.meta.url');
-    currentDirname = dirname(fileURLToPath(importMetaUrl));
-  } catch (error) {
-    // 后备方案：尝试从 module 路径推断
-    // 这种情况不应该发生，但作为最后的后备
-    console.error('[GUI Server] 无法确定模块目录，使用 process.cwd() 作为后备:', error);
-    currentDirname = process.cwd();
+  if (typeof __dirname !== 'undefined') {
+    // @ts-ignore
+    currentDirname = __dirname;
+  } else {
+    currentDirname = dirname(fileURLToPath(eval('import.meta.url')));
   }
+} catch {
+  currentDirname = process.cwd();
+}
+
+/**
+ * 寻找静态资源目录
+ */
+function resolveStaticDir(): string {
+  // 1. 优先使用环境变量
+  if (process.env.NND_GUI_DIR && existsSync(process.env.NND_GUI_DIR)) {
+    return process.env.NND_GUI_DIR;
+  }
+
+  // 2. 尝试相对路径（基于包的固定结构）
+  const paths = [
+    join(currentDirname, '../../gui'),          // 编译后: dist/esm/gui/ -> dist/gui
+    join(currentDirname, '../../../dist/gui'),  // 开发中: src/gui/ -> dist/gui
+  ];
+
+  for (const p of paths) {
+    if (existsSync(join(p, 'index.html'))) {
+      return p;
+    }
+  }
+
+  // 3. 兜底：通过包名解析（适用于打包工具处理了 import.meta 的情况）
+  try {
+    let pkgPath: string;
+    // @ts-ignore
+    if (typeof require !== 'undefined' && typeof require.resolve === 'function') {
+      // @ts-ignore
+      pkgPath = require.resolve('@mt0926/node-network-devtools/package.json');
+    } else {
+      const req = createRequire(eval('import.meta.url'));
+      pkgPath = req.resolve('@mt0926/node-network-devtools/package.json');
+    }
+    const p = join(dirname(pkgPath), 'dist/gui');
+    if (existsSync(join(p, 'index.html'))) return p;
+  } catch {}
+
+  // 最终兜底使用第一个路径
+  return paths[0];
 }
 
 /**
@@ -107,23 +139,12 @@ class GUIServerImpl implements IGUIServer {
     this.wsHub = wsHub ?? getWebSocketHub();
     this.eventBridge = eventBridge ?? getEventBridge();
     this.host = host;
-    // 静态文件目录：dist/gui（构建后的前端文件）
-    // 我们需要确保在不同环境下都能找到该目录：
-    // 1. 开发环境运行 tsx: currentDirname 是 src/gui，路径应为 ../../dist/gui
-    // 2. 编译后运行: currentDirname 是 dist/esm/gui 或 dist/cjs/gui，路径应为 ../../gui
     
-    const possiblePaths = [
-      join(currentDirname, '../../gui'), // 编译后路径
-      join(currentDirname, '../../../dist/gui'), // 开发环境(tsx)路径
-      join(process.cwd(), 'dist/gui'), // 后备路径
-    ];
-
-    this.staticDir = possiblePaths[0];
-    for (const p of possiblePaths) {
-      if (existsSync(p) && existsSync(join(p, 'index.html'))) {
-        this.staticDir = p;
-        break;
-      }
+    // 解析静态资源目录
+    this.staticDir = resolveStaticDir();
+    
+    if (!existsSync(join(this.staticDir, 'index.html'))) {
+      console.warn(`[GUI Server] 警告: 未能找到 GUI 静态资源。尝试路径: ${this.staticDir}`);
     }
   }
 
@@ -189,12 +210,25 @@ class GUIServerImpl implements IGUIServer {
     const url = new URL(req.url || '/', `http://${this.host}:${this.guiPort}`);
     let pathname = url.pathname;
 
-    console.log(`[GUI Server] 请求: ${pathname}, 静态目录: ${this.staticDir}`);
-
     // 默认路径指向 index.html
     if (pathname === '/') {
       pathname = '/index.html';
     }
+
+    // 1. 优先尝试从内存（嵌入资产）中查找
+    if (assets && assets[pathname]) {
+      const asset = assets[pathname];
+      console.log(`[GUI Server] 从内存提供资产: ${pathname}`);
+      res.writeHead(200, {
+        'Content-Type': asset.contentType,
+        'Cache-Control': 'no-cache',
+      });
+      res.end(Buffer.from(asset.content, 'base64'));
+      return;
+    }
+
+    // 2. 如果内存中没有（可能是开发环境），则尝试从文件系统查找
+    console.log(`[GUI Server] 内存中未找到 ${pathname}，尝试文件系统: ${this.staticDir}`);
 
     // 构建文件路径
     const filePath = join(this.staticDir, pathname);
@@ -206,18 +240,30 @@ class GUIServerImpl implements IGUIServer {
       
       if (!fileStat.isFile()) {
         // 如果不是文件，尝试返回 index.html（SPA 路由支持）
-        await this.serveFile(join(this.staticDir, 'index.html'), res);
+        const indexPath = join(this.staticDir, 'index.html');
+        if (existsSync(indexPath)) {
+          await this.serveFile(indexPath, res);
+        } else {
+          throw new Error(`Index file not found: ${indexPath}`);
+        }
         return;
       }
 
       await this.serveFile(filePath, res);
     } catch (err) {
-      console.log(`[GUI Server] 文件不存在: ${filePath}, 错误:`, err);
       // 文件不存在，尝试返回 index.html（SPA 路由支持）
+      const indexPath = join(this.staticDir, 'index.html');
       try {
-        await this.serveFile(join(this.staticDir, 'index.html'), res);
+        if (!existsSync(indexPath)) {
+          throw new Error(`Index file not found: ${indexPath}`);
+        }
+        await this.serveFile(indexPath, res);
       } catch (indexErr) {
-        console.log(`[GUI Server] index.html 也不存在:`, indexErr);
+        console.error(`[GUI Server] 错误: 无法提供文件 ${pathname}`);
+        console.error(`[GUI Server] 尝试路径: ${filePath}`);
+        console.error(`[GUI Server] 尝试 Index 路径: ${indexPath}`);
+        console.error(`[GUI Server] 当前静态目录配置: ${this.staticDir}`);
+        console.error(`[GUI Server] 提示: 如果路径不正确，请设置环境变量 NND_GUI_DIR`);
         this.sendError(res, 404, 'Not Found');
       }
     }

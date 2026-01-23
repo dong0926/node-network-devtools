@@ -4,10 +4,16 @@
  * 包含搜索输入框、方法过滤、状态码过滤、清空/暂停按钮
  */
 
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { HTTP_METHODS, STATUS_CODE_GROUPS, REQUEST_TYPES } from '../hooks';
 import type { FilterState } from '../hooks';
 
 interface ToolbarProps {
+  /** 当前视图 */
+  view: 'network' | 'traces';
+  /** 切换视图回调 */
+  onViewChange: (view: 'network' | 'traces') => void;
   /** 过滤器状态 */
   filters: FilterState;
   /** 设置搜索关键词 */
@@ -44,35 +50,97 @@ function FilterDropdown({
   selected: string[];
   onToggle: (option: string) => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
   const hasSelection = selected.length > 0;
 
+  // 更新下拉菜单位置
+  const updateCoords = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updateCoords();
+      window.addEventListener('resize', updateCoords);
+      window.addEventListener('scroll', updateCoords, true);
+    }
+    return () => {
+      window.removeEventListener('resize', updateCoords);
+      window.removeEventListener('scroll', updateCoords, true);
+    };
+  }, [isOpen]);
+
+  // 点击外部自动关闭
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const dropdownMenu = isOpen && createPortal(
+    <div 
+      ref={dropdownRef}
+      className="fixed py-1 bg-devtools-bg-secondary border border-devtools-border rounded shadow-lg z-[100] min-w-[120px] animate-in fade-in slide-in-from-top-1 duration-100"
+      style={{ top: `${coords.top + 4}px`, left: `${coords.left}px` }}
+    >
+      {options.map(option => (
+        <button
+          key={option}
+          className={`w-full px-3 py-1.5 text-xs text-left hover:bg-devtools-bg-hover transition-colors flex items-center gap-2 ${
+            selected.includes(option) ? 'text-devtools-accent font-medium' : 'text-devtools-text'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle(option);
+          }}
+        >
+          <span className="inline-block w-3 text-center">
+            {selected.includes(option) && '✓'}
+          </span>
+          {option}
+        </button>
+      ))}
+    </div>,
+    document.body
+  );
+
   return (
-    <div className="relative group">
+    <div className="relative">
       <button
-        className={`px-2 py-0.5 text-xs rounded flex items-center gap-1 ${
+        ref={buttonRef}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`px-2 py-0.5 text-xs rounded flex items-center gap-1 transition-colors ${
           hasSelection
             ? 'bg-devtools-accent text-devtools-bg'
             : 'bg-devtools-bg-secondary text-devtools-text-secondary hover:bg-devtools-bg-hover'
-        }`}
+        } ${isOpen ? 'ring-1 ring-devtools-accent' : ''}`}
       >
         {label}
         {hasSelection && <span>({selected.length})</span>}
-        <span className="text-[10px]">▼</span>
+        <span className={`text-[10px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
       </button>
-      <div className="absolute top-full left-0 mt-1 py-1 bg-devtools-bg-secondary border border-devtools-border rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[100px]">
-        {options.map(option => (
-          <button
-            key={option}
-            className={`w-full px-3 py-1 text-xs text-left hover:bg-devtools-bg-hover ${
-              selected.includes(option) ? 'text-devtools-accent' : 'text-devtools-text'
-            }`}
-            onClick={() => onToggle(option)}
-          >
-            {selected.includes(option) && '✓ '}
-            {option}
-          </button>
-        ))}
-      </div>
+      {dropdownMenu}
     </div>
   );
 }
@@ -81,6 +149,8 @@ function FilterDropdown({
  * 工具栏组件
  */
 export function Toolbar({
+  view,
+  onViewChange,
   filters,
   onSearchChange,
   onToggleMethod,
@@ -94,6 +164,41 @@ export function Toolbar({
 }: ToolbarProps) {
   return (
     <div className="h-8 flex items-center px-2 gap-1 sm:gap-2 border-b border-devtools-border bg-devtools-bg overflow-x-auto">
+      {/* 视图切换 */}
+      <div className="flex bg-devtools-bg-secondary rounded p-0.5 shrink-0">
+        <button
+          className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+            view === 'network' 
+              ? 'bg-devtools-accent text-devtools-bg' 
+              : 'text-devtools-text-secondary hover:text-devtools-text'
+          }`}
+          onClick={() => onViewChange('network')}
+        >
+          NETWORK
+        </button>
+        <button
+          className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+            view === 'traces' 
+              ? 'bg-devtools-accent text-devtools-bg' 
+              : 'text-devtools-text-secondary hover:text-devtools-text'
+          }`}
+          onClick={() => onViewChange('traces')}
+        >
+          TRACES
+        </button>
+      </div>
+
+      {/* 分隔符 */}
+      <div className="w-px h-4 bg-devtools-border shrink-0" />
+
+      {/* 版本号 */}
+      <div className="flex items-center h-6 px-2 text-[10px] font-bold bg-devtools-bg-secondary text-devtools-text-secondary rounded select-none shrink-0" title={`v${__APP_VERSION__}`}>
+        v{__APP_VERSION__}
+      </div>
+
+      {/* 分隔符 */}
+      <div className="w-px h-4 bg-devtools-border shrink-0" />
+
       {/* 搜索输入框 */}
       <input
         type="text"

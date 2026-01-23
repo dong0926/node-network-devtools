@@ -9,6 +9,8 @@ The project documentation MUST accurately describe the technical implementation 
 - **Then** they MUST NOT see "Puppeteer" mentioned as the driver
 - **And** they MUST see that it uses the system's native browser (Chrome/Edge/Chromium)
 
+## ADDED Requirements
+
 ### Requirement: Minimal Installation Instructions
 The installation instructions MUST only include necessary packages.
 

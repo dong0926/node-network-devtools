@@ -12,4 +12,5 @@ export { ResponseTab } from './ResponseTab';
 export { TimingTab } from './TimingTab';
 export { StatusBar } from './StatusBar';
 export { ThemeToggle } from './ThemeToggle';
+export { TraceList } from './TraceList';
 export { Resizer } from './Resizer';

@@ -3,11 +3,13 @@ node_modules/
 
 .gemini-clipboard
 .kiro/
+.claude/
 
 TODO-BEFORE-PUBLISH.md
 
 # Build output
 dist/
+src/gui/assets.gen.ts
 
 # IDE
 .idea/

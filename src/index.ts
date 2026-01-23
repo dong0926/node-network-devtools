@@ -105,6 +105,18 @@ export {
   isPortAvailable,
 } from './gui/port-utils.js';
 
+// 服务端追踪 (Server Trace)
+export {
+  TraceManager,
+  traceManager,
+  type TraceNode,
+  type TraceNodeType,
+  type TraceSession,
+} from './context/trace-manager.js';
+export { TraceAggregator } from './context/trace-aggregator.js';
+export { TraceCollector } from './interceptors/trace-collector.js';
+export { ServerPatcher } from './interceptors/server-patcher.js';
+
 /**
  * 快速初始化函数
  * 

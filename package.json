@@ -35,12 +35,13 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "pnpm build:esm && pnpm build:cjs && pnpm build:types && pnpm build:gui && pnpm build:cjs-package",
+    "build": "pnpm build:gui && pnpm generate-assets && pnpm build:esm && pnpm build:cjs && pnpm build:types && pnpm build:cjs-package",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:cjs-package": "node scripts/create-cjs-package.js",
     "build:types": "tsc -p tsconfig.types.json",
     "build:gui": "cd packages/gui && pnpm install && pnpm build",
+    "generate-assets": "node scripts/generate-assets.js",
     "test": "vitest run",
     "test:http": "tsx --test src/interceptors/http-patcher.node-test.mjs",
     "test:undici": "tsx --test src/interceptors/undici-patcher.node-test.mjs",
@@ -93,6 +94,7 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/ws": "^8.5.13",
+    "express": "^5.2.1",
     "prettier": "^3.1.0",
     "rimraf": "^5.0.5",
     "tsx": "^4.21.0",
