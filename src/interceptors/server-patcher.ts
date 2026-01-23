@@ -23,7 +23,9 @@ export const ServerPatcher = {
 
     this.patchHttp();
     this.patchHttps();
-    TraceCollector.install();
+    TraceCollector.install().catch(err => {
+      console.error('[server-patcher] Failed to install TraceCollector:', err);
+    });
     FastifyAdapter.install();
     ExpressAdapter.install();
     installed = true;
@@ -61,14 +63,14 @@ export const ServerPatcher = {
         });
 
         const handleFinish = () => {
-          session.rootNode.endTime = Date.now();
-          session.rootNode.duration = session.rootNode.endTime - session.rootNode.startTime;
-          
-          // 聚合与降噪
-          const aggregatedTrace = TraceAggregator.aggregate(session);
-          
-          // 发送到前端
           try {
+            session.rootNode.endTime = Date.now();
+            session.rootNode.duration = session.rootNode.endTime - session.rootNode.startTime;
+            
+            // 聚合与降噪
+            const aggregatedTrace = TraceAggregator.aggregate(session);
+            
+            // 发送到前端
             const eventBridge = getEventBridge();
             if (eventBridge.isRunning()) {
               // 关键修复：确保包含 requestId
@@ -78,7 +80,7 @@ export const ServerPatcher = {
               });
             }
           } catch (e) {
-            // Ignore
+            console.error('[server-trace] Failed to finalize trace:', e);
           }
         };
 

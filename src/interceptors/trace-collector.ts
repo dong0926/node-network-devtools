@@ -1,4 +1,3 @@
-import async_hooks from 'node:async_hooks';
 import { traceManager, type TraceNodeType } from '../context/trace-manager.js';
 import { getConfig } from '../config.js';
 import { SmartStackCollector } from '../utils/stack-collector.js';
@@ -31,12 +30,15 @@ const asyncIdToNodeId = new Map<number, number>();
  * 追踪收集器
  */
 export const TraceCollector = {
-  hook: null as async_hooks.AsyncHook | null,
+  hook: null as any | null,
 
-  install() {
+  async install() {
     if (this.hook) return;
     const config = getConfig();
     if (!config.traceEnabled) return;
+
+    // 延迟加载 async_hooks
+    const async_hooks = await import('node:async_hooks');
 
     this.hook = async_hooks.createHook({
       init: (asyncId, type, triggerAsyncId, resource) => {

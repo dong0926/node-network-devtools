@@ -24,6 +24,7 @@
 - 🔌 **全能拦截** - 原生支持 `http/https` 模块以及现代的 `fetch/undici` (Node.js 18+)。
 - 🛠️ **零侵入开发** - 只需一行代码或一个简单的 CLI 标志即可接入项目。
 - 🖥️ **极简浏览器窗口** - 自动启动基于系统原生浏览器 (Chrome, Edge, 或 Chromium) 的紧凑 App 模式窗口。
+- 🔍 **服务端追踪 (新!)** - 可视化 Node.js 服务内部的执行流程（异步调用树/火焰图）。
 - 🔗 **智能请求追踪** - 利用 `AsyncLocalStorage` 自动关联同一业务流中的多个异步请求。
 - 🛡️ **内置脱敏** - 自动隐藏 `Authorization` 和 `Cookie` 等敏感信息，保障安全。
 - ⚡ **框架友好** - 无缝集成 Next.js, Express, Fastify 等主流框架。
@@ -140,6 +141,15 @@ NND_AUTO_OPEN=false node --import @mt0926/node-network-devtools/register your-sc
 | `NND_BROWSER_WIDTH` | 浏览器窗口宽度 | 800 |
 | `NND_BROWSER_HEIGHT` | 浏览器窗口高度 | 600 |
 | `NND_BROWSER_TITLE` | 浏览器窗口标题 | Node Network DevTools |
+
+#### 服务端追踪设置
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `NND_TRACE_ENABLED` | 开启服务端执行追踪 | false |
+| `NND_TRACE_MAX_NODES` | 每个请求的最大追踪节点数 | 5000 |
+| `NND_TRACE_THRESHOLD_MS` | 异步节点自动折叠阈值（毫秒） | 2 |
+| `NND_TRACE_IGNORED_MODULES` | 堆栈捕获中忽略的模块 | node_modules,node: |
 
 ### 编程配置
 
