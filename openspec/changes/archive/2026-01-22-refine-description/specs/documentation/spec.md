@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Compelling Project Description
 The project description MUST clearly state the tool's purpose, its zero-config nature, and the types of requests it can intercept.

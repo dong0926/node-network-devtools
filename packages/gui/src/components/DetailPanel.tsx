@@ -50,9 +50,9 @@ export function DetailPanel({ request, initialWidth }: DetailPanelProps) {
   });
 
   return (
-    <div className="h-full border-l border-devtools-border flex flex-col bg-devtools-bg w-full md:w-auto" style={{ width: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${width}px` : '100%' }}>
+    <div className="h-full flex flex-row bg-devtools-bg w-full md:w-auto relative" style={{ width: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${width}px` : '100%' }}>
       {/* Resizer 分隔条 - 仅在桌面设备上显示 */}
-      <div className="hidden md:block">
+      <div className="hidden md:block h-full flex-shrink-0">
         <Resizer
           width={width}
           onWidthChange={setWidth}
@@ -64,55 +64,58 @@ export function DetailPanel({ request, initialWidth }: DetailPanelProps) {
         />
       </div>
 
-      {/* 标签页导航 */}
-      <div className="h-7 flex items-center px-2 border-b border-devtools-border bg-devtools-bg shrink-0 overflow-x-auto">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            className={`px-2 sm:px-3 py-1 text-xs whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'text-devtools-accent border-b-2 border-devtools-accent'
-                : 'text-devtools-text-secondary hover:text-devtools-text'
-            }`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 标签页内容 */}
-      <div className="flex-1 overflow-auto text-xs">
-        {activeTab === 'headers' && (
-          <HeadersTab
-            requestHeaders={request.requestHeaders}
-            responseHeaders={request.responseHeaders}
-          />
-        )}
-        {activeTab === 'payload' && (
-          <PayloadTab body={request.requestBody} url={request.url} />
-        )}
-        {activeTab === 'response' && (
-          <ResponseTab
-            body={request.responseBody}
-          />
-        )}
-        {activeTab === 'timing' && (
-          <TimingTab
-            timing={request.timing}
-            totalTime={request.time}
-          />
-        )}
-      </div>
-
-      {/* 错误信息（如果有） */}
-      {request.error && (
-        <div className="p-3 border-t border-devtools-border bg-devtools-bg-secondary shrink-0">
-          <div className="text-xs text-devtools-error">
-            <span className="font-medium">错误:</span> [{request.error.code}] {request.error.message}
-          </div>
+      {/* 内容区域 */}
+      <div className="flex-1 flex flex-col min-w-0 h-full border-l border-devtools-border md:border-l-0">
+        {/* 标签页导航 */}
+        <div className="h-7 flex items-center px-2 border-b border-devtools-border bg-devtools-bg shrink-0 overflow-x-auto">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              className={`px-2 sm:px-3 py-1 text-xs whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'text-devtools-accent border-b-2 border-devtools-accent'
+                  : 'text-devtools-text-secondary hover:text-devtools-text'
+              }`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-      )}
+
+        {/* 标签页内容 */}
+        <div className="flex-1 overflow-auto text-xs">
+          {activeTab === 'headers' && (
+            <HeadersTab
+              requestHeaders={request.requestHeaders}
+              responseHeaders={request.responseHeaders}
+            />
+          )}
+          {activeTab === 'payload' && (
+            <PayloadTab body={request.requestBody} url={request.url} />
+          )}
+          {activeTab === 'response' && (
+            <ResponseTab
+              body={request.responseBody}
+            />
+          )}
+          {activeTab === 'timing' && (
+            <TimingTab
+              timing={request.timing}
+              totalTime={request.time}
+            />
+          )}
+        </div>
+
+        {/* 错误信息（如果有） */}
+        {request.error && (
+          <div className="p-3 border-t border-devtools-border bg-devtools-bg-secondary shrink-0">
+            <div className="text-xs text-devtools-error">
+              <span className="font-medium">错误:</span> [{request.error.code}] {request.error.message}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

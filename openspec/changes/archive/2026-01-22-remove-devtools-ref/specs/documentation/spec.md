@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Accurate Technical Description
 The project documentation MUST accurately state that the tool provides a Web GUI for monitoring and MUST NOT claim integration with Chrome DevTools.
